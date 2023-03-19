@@ -1,0 +1,30 @@
+//BNF NOTATION
+
+//Least precedence to most precedence is followed
+
+//bitwise or
+<program> ::= <expr> ('|' <expr>)*
+
+//bitwise and
+<expr> ::= <term> ('&' <term>)*
+
+//addition and subtraction
+<term> ::= <factor> ('+' <factor> | '-' <factor>)*
+
+//multiplication
+<factor> ::= <multiplicand> ('*' <multiplicand>)*
+
+//function calls ls rs lr rr not xor
+<multiplicand> ::= <xor> | <not> | <shift_rotation> | <number> | <variable>
+<xor> ::= 'xor' '(' <prop> ',' <prop> ')'
+<not> ::= 'not' '(' <prop> ')'
+<shift_rotation> ::= <shift_left_expr> | <shift_right_expr> | <rotate_left_expr> | <rotate_right_expr>
+<shift_left_expr> ::= 'ls' '(' <prop> ',' <number> ')'
+<shift_right_expr> ::= 'rs' '(' <prop> ',' <number> ')'
+<rotate_left_expr> ::= 'lr' '(' <prop> ',' <number> ')'
+<rotate_right_expr> ::= 'rr' '(' <prop> ',' <number> ')'
+
+
+<prop> ::= <variable> | <number>
+<number> ::= [0-9]+
+<variable> ::= [a-zA-Z_][a-zA-Z0-9_]*
