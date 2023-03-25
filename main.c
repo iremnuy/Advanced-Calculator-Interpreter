@@ -25,7 +25,7 @@ table *Hashtable;
 int hash_function(char *key);
 void init_table(table *table);
 void insert(table *table, char *key, int value);
-
+void strip_whitespace(char *str);
 
 
 
@@ -485,6 +485,16 @@ int evaluate_postfix(Token *postfix) {
 
 
 }
+//for stripping input
+void strip_whitespace(char *str) {
+    int i, j;
+    for (i = 0, j = 0; str[i]; i++) {
+        if (!isspace(str[i])) {
+            str[j++] = str[i];
+        }
+    }
+    str[j] = '\0';
+}
 
 
 
@@ -495,8 +505,39 @@ int main(){
 
 
     char line[257]=""; //input line will be stored in here
-    printf("Enter>");
-    while(fgets(line,sizeof(line),stdin)){
+    printf(">");
+    while(fgets(line,sizeof(line),stdin) != NULL){   //CTRL^D inputs are checked by != null... apperently this works on unix sistems
+
+
+        //blankline inputs
+        if(strcmp(line,"\n")==0){
+            printf(">");
+            continue;
+        }
+
+
+        //erroneous inputs
+        //1)empty paranthesis
+        char *paranthesis_pos = strstr(line, "()");
+        if(paranthesis_pos != NULL){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+
+        //2)lines starting with operations. i.e unary cases like +1+b
+        else if(line[0] == '+' ||line[0] == '-' || line[0] == '*' || line[0] == '&'|| line[0] == '|'){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+
+//        //3)
+//        else if(){
+//            printf("Error!\n");
+//            printf(">");
+//            continue;
+//        }
 
 
         char *pos = strchr(line, '=');
@@ -505,6 +546,7 @@ int main(){
             char *variable = line; // first part is the variable
             char *value = pos + 1; // second part is the value
 
+            strip_whitespace(variable);
 
             // do something with variable and value
             Token postfixx[257];
@@ -521,21 +563,12 @@ int main(){
 
             insert(Hashtable,variable,res);
             printf("now our table has %s matched with %d\n", line, lookup(Hashtable,line));
+            printf(">");
+            continue;
 
         }
 
-//        else if(isalpha(line)){ //else if a variable is called
-//            /**
-//            * if input has the form  abcd
-//            * so hashtable shit
-//            */
-//        }
-
-        else if (line==NULL ||strcmp(line,"\n")==0){
-            //free the memory 
-            break; //ctrl+d has entered
-        }
-        else{ //normal expression input
+        else{ //normal expression input exists
             Token postfixx[257];
             Token tokens[257];
             int numtok = 0;
@@ -546,11 +579,14 @@ int main(){
              }
              int res=evaluate_postfix(postfixx);
              printf("RESULT İS: %d\n",res);
+            printf(">");
+            continue;
        }
-        
+
+
         }
-        
-        
+
+    printf("end of program");
 
     }
 
