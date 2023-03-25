@@ -13,12 +13,21 @@
 typedef struct {
     char* key;
     int value;
-} hashTuple;
+} element;
 
 typedef struct {
-    hashTuple *elements;
+    element *elements;
     int size;
 } table;
+
+table *Hashtable;
+
+int hash_function(char *key);
+void init_table(table *table);
+void insert(table *table, char *key, int value);
+
+
+
 
 int hash_function(char *key){
     int hash = 0;
@@ -30,14 +39,18 @@ int hash_function(char *key){
 }
 
 void init_table(table *table) {
-    table->elements = (hashTuple *)calloc(TABLE_SIZE, sizeof(hashTuple));
+    table->elements = (element *)calloc(TABLE_SIZE, sizeof(element));
     table->size = TABLE_SIZE;
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        table->elements[i].key = NULL;
+        table->elements[i].value = 0;
+    }
 }
 
 void insert(table *table, char *key, int value) {
     int index = hash_function(key);
     int i = index;
-    while (table->elements[i].key != NULL) {
+    while (table->elements[i].key != NULL && strcmp(table->elements[i].key, "") != 0) {
         if (strcmp(table->elements[i].key, key) == 0) {
             table->elements[i].value = value;
             return;
@@ -63,13 +76,13 @@ int lookup(table *table, char *key) {
         i = (i + 1) % table->size;
         if (i == index) {
             printf("Key not found.\n");
-            return 0.0;
+            return 0;
         }
     }
     printf("Key not found.\n");
     return 0;
 }
-table* Hashtable;
+
 
 //hashtable implementation ends here
 
@@ -383,6 +396,7 @@ int evaluate_postfix(Token *postfix) {
             result = op1 ^ op2;
             stack[++top] = result; //integerı stack token valuesu vey bir sekilde atamak lazım
         }
+
         else if (strcmp(op, "not") == 0) {
             op1 = stack[top--];
             result = ~op1;
@@ -443,6 +457,16 @@ int evaluate_postfix(Token *postfix) {
             result = (op2 >> op1);
             stack[++top] = result;
         }
+
+        //assigment case
+        else if (strcmp(op, "=") == 0) {
+            op1 = stack[top--];
+            op2 = stack[top--];
+        /**
+         * CODE HERE
+         */
+        }
+
         else {
             printf("Unknown operator: %s\n", op);
             continue; // Return an error code
@@ -458,7 +482,7 @@ int evaluate_postfix(Token *postfix) {
 
 
 int main(){
-    //init_table(Hashtable);
+
     char line[257]=""; //input line will be stored in here
     printf("Enter>");
     while(fgets(line,sizeof(line),stdin)){
@@ -468,16 +492,23 @@ int main(){
             break; //ctrl+d has entered
         }
         else{
-        Token postfixx[257];
-        Token tokens[257];
-        int numtok=0;
-        tokenize(line,tokens,&numtok);
-        infix_to_postfix(tokens,postfixx);
-        for (int i = 0; i < numtoken; i++) {
-        printf("%s\n", postfixx[i].value);
-         }
-         int res=evaluate_postfix(postfixx);
-         printf("RESULT İS: %d\n",res);
+
+            Hashtable = (table *)malloc(sizeof(table));
+            init_table(Hashtable);
+            insert(Hashtable,"A",3);
+            printf("now our table has %s matched with %d", "A", lookup(Hashtable,"A"));
+
+
+            Token postfixx[257];
+            Token tokens[257];
+            int numtok = 0;
+            tokenize(line,tokens,&numtok);
+            infix_to_postfix(tokens,postfixx);
+            for (int i = 0; i < numtoken; i++) {
+            printf("%s\n", postfixx[i].value);
+             }
+             int res=evaluate_postfix(postfixx);
+             printf("RESULT İS: %d\n",res);
        }
         
         }
