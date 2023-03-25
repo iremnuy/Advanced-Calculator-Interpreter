@@ -1,8 +1,79 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<ctype.h>
-#include<string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stddef.h>
+#include <stdbool.h>
 
+
+
+//hashtable implementation - needs elaboration
+#define TABLE_SIZE 128
+
+typedef struct {
+    char* key;
+    int value;
+} hashTuple;
+
+typedef struct {
+    hashTuple *elements;
+    int size;
+} table;
+
+int hash_function(char *key){
+    int hash = 0;
+    int length = strlen(key);
+    for(int i = 0; i<length ;i++){
+        hash = hash + key[i];
+    }
+    return hash % TABLE_SIZE;
+}
+
+void init_table(table *table) {
+    table->elements = (hashTuple *)calloc(TABLE_SIZE, sizeof(hashTuple));
+    table->size = TABLE_SIZE;
+}
+
+void insert(table *table, char *key, int value) {
+    int index = hash_function(key);
+    int i = index;
+    while (table->elements[i].key != NULL) {
+        if (strcmp(table->elements[i].key, key) == 0) {
+            table->elements[i].value = value;
+            return;
+        }
+        i = (i + 1) % table->size;
+        if (i == index) {
+            printf("Table is full.\n");
+            return;
+        }
+    }
+    table->elements[i].key = strdup(key);
+    table->elements[i].value = value;
+}
+
+
+int lookup(table *table, char *key) {
+    int index = hash_function(key);
+    int i = index;
+    while (table->elements[i].key != NULL) {
+        if (strcmp(table->elements[i].key, key) == 0) {
+            return table->elements[i].value;
+        }
+        i = (i + 1) % table->size;
+        if (i == index) {
+            printf("Key not found.\n");
+            return 0.0;
+        }
+    }
+    printf("Key not found.\n");
+    return 0;
+}
+table* Hashtable;
+
+//hashtable implementation ends here
+
+int MAX_EXPR_LEN=257;
 typedef enum {
     NONE, //end token of array to understand conclusion,after "%" also can be none
     NUM, //all numbers 
@@ -12,10 +83,11 @@ typedef enum {
     LPAR,
     RPAR,
     COMMA,
-    ASSIGN
+    ASSIGN,
+    AND,
+    OR
 
 } TokenType;
-
 typedef struct {
     TokenType type;
     char* value; //string value of the token 
@@ -23,10 +95,14 @@ typedef struct {
     //Token *arguments;  //array for functions arguments just like initial array of all tokens .?
 
 } Token;
+
 Token tokens[257];
 int current_index=0;
 int current_token_type;
 int *num_tokens = 0;
+int old;
+int numtoken;
+
 Token create_token(int type, char* value);
 
  Token* tokenize(char* input,Token tokens[],int* num_tokens) { //input is the given input of user as a whole
@@ -92,9 +168,8 @@ else if (curr_char == '=') {
     curr_char = input[i];
     //free(token_str);
 }     
-        else if (curr_char == '+' || curr_char == '-' || curr_char == '*'   ||
-                   curr_char == '(' || curr_char == ')'|| curr_char == '&'|| curr_char == '|') {
-                    
+        else if (curr_char == '+' || curr_char == '-' || curr_char == '*'  )
+                      {
             char* token_str = (char*) malloc(2);
             token_str[0] = curr_char;
             token_str[1] = '\0';
@@ -104,6 +179,57 @@ else if (curr_char == '=') {
             i++;
             curr_char = input[i];
             //free(token_str);
+        }
+        else if(curr_char == '(' ){
+            char* token_str = (char*) malloc(2);
+            token_str[0] = curr_char;
+            token_str[1] = '\0';
+            tokens[*num_tokens] =create_token(LPAR, token_str);
+             //create token returns a pointer this line assigns the pointers reference token to tokens array
+            (*num_tokens)++;
+            i++;
+            curr_char = input[i];
+            //free(token_str);
+
+
+
+        }else if(curr_char == ')'){
+            char* token_str = (char*) malloc(2);
+            token_str[0] = curr_char;
+            token_str[1] = '\0';
+            tokens[*num_tokens] =create_token(RPAR, token_str);
+             //create token returns a pointer this line assigns the pointers reference token to tokens array
+            (*num_tokens)++;
+            i++;
+            curr_char = input[i];
+            //free(token_str);
+
+        }
+        else if( curr_char == '&'){
+            char* token_str = (char*) malloc(2);
+            token_str[0] = curr_char;
+            token_str[1] = '\0';
+            tokens[*num_tokens] =create_token(AND, token_str);
+             //create token returns a pointer this line assigns the pointers reference token to tokens array
+            (*num_tokens)++;
+            i++;
+            curr_char = input[i];
+            //free(token_str);
+
+
+        }else if( curr_char == '|'){
+            char* token_str = (char*) malloc(2);
+            token_str[0] = curr_char;
+            token_str[1] = '\0';
+            tokens[*num_tokens] =create_token(OR, token_str);
+             //create token returns a pointer this line assigns the pointers reference token to tokens array
+            (*num_tokens)++;
+            i++;
+            curr_char = input[i];
+            //free(token_str);
+
+
+
         }
         else {
             i++;
@@ -115,6 +241,7 @@ else if (curr_char == '=') {
 
     
     //printf("Token %d: type=%d, value=%s \n", i, tokens[i].type,tokens[i].value);
+    numtoken=*num_tokens;
 }
     return tokens;
 
@@ -136,379 +263,226 @@ Token create_token(int type, char* value) {
 }
 
 
-//PARSER
-enum Parse_Tokens {
-    TOKEN_NOT, TOKEN_PLUS, TOKEN_MINUS, TOKEN_MULT, TOKEN_AND, TOKEN_OR, TOKEN_XOR,
-    TOKEN_LS, TOKEN_RS, TOKEN_LR, TOKEN_RR,
-    TOKEN_NUM, TOKEN_VAR, TOKEN_COMMA, TOKEN_LP, TOKEN_RP, TOK_EOF
-};
-
-/**
- * struct tokendata part
- * @return
- */
-
-//FUNCTIONS
-int parse_program();
-int parse_expression();
-int parse_term();
-int parse_factor();
-int parse_multiplicand();
-int parse_xor();
-int parse_not();
-int parse_shift_rotation();
-int parse_left_shift();
-int parse_right_shift();
-int parse_left_rotation();
-int parse_right_rotation();
-int parse_prop();
-int parse_number();
-int parse_variable();
-
-void get_next_token();
+int precedence(char *op) {
+    printf("precedence called this is string: %s",op);
+    if  (strcmp(op, "=") == 0)
+        return 6;
 
 
-//the parse_expression function example from slides c-ified
+    else if (strcmp(op, "(") == 0 || strcmp(op, ")") == 0)
+        return 0;
 
+//     else if (strcmp(op, ",") == 0)
+//        return 4;
 
+    else if (strcmp(op, "xor") == 0 || strcmp(op, "not") == 0 || strcmp(op, "ls") == 0 || strcmp(op, "rs") == 0 || strcmp(op, "lr") == 0 || strcmp(op, "rr") == 0)
+        return 5;
 
-/* a converter
- * initialize current_token_type
- * implement get_next_token
- */
-
-
-int convert(Token tok[]){
-     Token token=tok[current_index];
-     printf("token value to be converted: %s     \n ",tok[current_index].value);
-     printf("this is token type:  %d this is vl: %s     \n",token.type,token.value);
-
-    if(strcmp(token.value,"(") == 0) { // "LP"
-        current_token_type = TOKEN_LP;
+    else if (strcmp(op, "*") == 0){
+    printf("multiplication precedence\n");
+        return 4;
     }
-    else if(strcmp(token.value,")") == 0) { // "RP""
-        current_token_type = TOKEN_RP;
-    }
-    else if(strcmp(token.value,",") == 0) { // ","
-        current_token_type = TOKEN_COMMA;
+    else if (strcmp(op, "+") == 0 || strcmp(op, "-") ==0)
+        return 3;
 
-    }
-    else if(strcmp(token.value,"not") == 0) { // "tilda"
-        current_token_type = TOKEN_NOT;
-    }
+    else if (strcmp(op, "&") == 0)
+        return 2;
 
-    else if(strcmp(token.value,"+")==0) {
-        printf("arti bulundu convert edildi");
-        current_token_type = TOKEN_PLUS;
-    }
+    else if (strcmp(op, "|") == 0)
+        return 1;
+    else
+        return -1;
+}
+int numofpost;
 
-    else if(strcmp(token.value,"-")==0) {
-        current_token_type = TOKEN_MINUS;
-    }
+void infix_to_postfix(Token *tokens, Token *postfix) {
+    printf("evaluating infix to postfix\n");
+    Token stack[MAX_EXPR_LEN];
+    int top = -1;
+    int i, j;
 
-    else if(strcmp(token.value,"*")==0) {
-        current_token_type = TOKEN_MULT;
-    }
-    else if(strcmp(token.value,"&")==0) {
-        current_token_type = TOKEN_AND;
-    }
-
-    else if(strcmp(token.value,"|")==0) {
-        current_token_type = TOKEN_OR;
+    for (i = 0, j = 0; i<numtoken; i++) {
+        printf("for this is token val :%s \n",tokens[i].value);
+        // If the current character is an operand, add it to the postfix expression
+        if (tokens[i].type!=4 && (isdigit((int) *(tokens[i].value)) || isalpha((int) *(tokens[i].value)))) {
+            printf("type num is %d f\n",tokens[i].type);
+            postfix[j++].value = (tokens[i].value);
+            printf("this is assigned to postfix j : %s",tokens[i].value);
+        }
+        // If the current character is an operator, add it to the stack
+        else if (strcmp(tokens[i].value, "(") == 0) {
+            stack[++top].value = (tokens[i].value);
+        }
+        else if (strcmp(tokens[i].value, ")") == 0) {
+            // Pop operators off the stack and add them to the postfix expression until a matching left parenthesis is encountered
+            while (top >= 0 && strcmp(stack[top].value,"(")!=0) {
+                postfix[j++].value = stack[top--].value;
+            }
+            // Discard the left parenthesis
+            top--;
+        }
+        else {
+            printf("precedence ölçüm\n");
+            printf("top this is: %d",top);
+            // Pop operators off the stack and add them to the postfix expression until an operator with lower precedence is encountered
+            while (top >= 0 && precedence(stack[top].value) >= precedence(tokens[i].value)) {
+                printf("precdence kosulu oldu tamam\n");
+                if (strcmp(stack[top].value,",")==0){
+                    top--; //pass the comma and reach the function
+                    continue;
+                }
+               
+                postfix[j++].value = stack[top--].value;
+            }
+            // Push the current operator onto the stack
+            stack[++top].value = tokens[i].value;
+        }
     }
 
-    else if(strcmp(token.value,"xor")== 0) {
-        current_token_type = TOKEN_XOR;
+    // Pop any remaining operators off the stack and add them to the postfix expression
+    printf("top:::  %d\n",top);
+    while (top >= 0) {
+        printf(" this is last added to post : %s  \n", stack[top].value);
+        postfix[j++].value = stack[top--].value;
     }
 
-    else if(strcmp(token.value,"ls")==0) {
-        current_token_type = TOKEN_LS;
-    }
+    // Add null terminator to the end of the postfix expression
+    postfix[j].value = '\0';
+    numofpost=j;
 
-    else if(strcmp(token.value,"rs")==0) {
-        current_token_type = TOKEN_RS;
-    }
-    else if(strcmp(token.value,"lr")==0) {
-        current_token_type = TOKEN_LR;
-    }
-    else if(strcmp(token.value,"rr")==0) {
-        current_token_type = TOKEN_RR;
-    }
+    printf("inf to post çıkış\n");
+}
 
-        //NUM AND VAR TYPES
-        //needs regex...
-        //i only make nums
+
+
+
+// Function to evaluate a postfix expression
+int evaluate_postfix(Token *postfix) {
+    printf("evaluating\n");
+    int stack[MAX_EXPR_LEN];
+    int top = -1;
+    int i;
+    for (i = 0; i<numofpost; i++) {
+    // If the current character is an operand, push it onto the stack
+    if (isdigit(*postfix[i].value)) {
+        int operand = atoi(postfix[i].value);
+        stack[++top] = operand;
+    }
     else {
-        current_token_type = TOKEN_NUM;
-    }
-    printf("converting completed this is current type : %d     \n",current_token_type);
-
-    return current_token_type; //this is the new type of token it is a number like 1,2,3,4
-
-}
-
-
-void get_next_token() {
-    if (tokens[current_index].value == NULL || tokens[current_index].type == NONE) {
-        return;
-
-    } else {
-    current_token_type = convert(tokens);
-    //printf("Getting next token...\n this is new token type number %d\n and its value: %s", current_token_type,
-     //      tokens[current_index].value);
-    current_index++;
-        return;
-}
-}
-
-//bitwise or
-int parse_program(){
-    int expression = parse_expression();
-    while(current_token_type == TOKEN_OR) { //least importance
-        int temp= current_token_type;
-        get_next_token();
-        if(temp == TOKEN_OR){
-            expression = expression | parse_expression();
-            printf("9&5"
-                   "OR OPERATİON RESULT İS Result is %d\n",expression);
+        int op1, op2, result;
+        char op[32]="";
+        int j = 0;
+        strcpy(op, postfix[i].value);
+        printf("this is op %s",op);
+        if (strcmp(op, "xor") == 0) {
+            printf("xor catch\n");
+            op1 = (stack[top--]);
+            printf("op1: %d\n",op1);
+            op2 = (stack[top--]);
+             printf("op2: %d\n",op2);
+            result = op1 ^ op2;
+            stack[++top] = result; //integerı stack token valuesu vey bir sekilde atamak lazım
+        }
+        else if (strcmp(op, "not") == 0) {
+            op1 = stack[top--];
+            result = ~op1;
+            stack[++top] = result;
+        }
+        else if (strcmp(op, "*") == 0) {
+            op1 = stack[top--];
+            op2 = stack[top--];
+            result = op2 * op1;
+            stack[++top] = result;
+        }
+        else if (strcmp(op, "+") == 0) {
+            op1 = stack[top--];
+            op2 = stack[top--];
+            result = op2 + op1;
+            printf("lastly result %d \n",result);
+            stack[++top] = result;
+        }
+        else if (strcmp(op, "-") == 0) {
+            op1 = stack[top--];
+            op2 = stack[top--];
+            result = op2 - op1;
+            stack[++top] = result;
+        }
+        else if (strcmp(op, "&") == 0) {
+            op1 = stack[top--];
+            op2 = stack[top--];
+            result =op2&op1;
+            stack[++top] = result;
+        }
+        else if (strcmp(op, "|") == 0) {
+            op1 = stack[top--];
+            op2 = stack[top--];
+            result=op2|op1;
+            stack[++top] = result;
+        }
+        else if (strcmp(op, "lr") == 0) {
+            op1 = stack[top--];
+            op2 = stack[top--];
+            result = (op2 << op1) | (op2 >> (sizeof(op2) * CHAR_BIT - op1));
+            stack[++top] = result;
+        }
+        else if (strcmp(op, "rr") == 0) {
+            op1 = stack[top--];
+            op2 = stack[top--];
+            result = (op2 >> op1) | (op2 << (sizeof(op2) * CHAR_BIT - op1));
+            stack[++top] = result;
+        }
+        else if (strcmp(op, "ls") == 0) {
+            op1 = stack[top--];
+            op2 = stack[top--];
+            result = (op2 << op1);
+            stack[++top] = result;
+        }
+        else if (strcmp(op, "rs") == 0) {
+            op1 = stack[top--];
+            op2 = stack[top--];
+            result = (op2 >> op1);
+            stack[++top] = result;
+        }
+        else {
+            printf("Unknown operator: %s\n", op);
+            continue; // Return an error code
         }
     }
-    return expression;
+   
+}
+ return stack[top]; 
+
+
 }
 
-
-//bitwise and
-int  parse_expression(){
-    int term = parse_term();
-    while (current_token_type == TOKEN_AND) {
-        int temp= current_token_type;
-        get_next_token(); //advance method in psget_next_token(); //advance method in ps
-        if (temp == TOKEN_AND) {
-            term = term & parse_term();
-        }
-    }
-    return term;
-}
-
-//addition and subtraction
-int  parse_term(){
-    int factor = parse_factor();
-    while (current_token_type == TOKEN_PLUS || current_token_type == TOKEN_MINUS) {
-        int temp= current_token_type;
-        get_next_token(); //advance method in ps
-        if (temp == TOKEN_PLUS) {
-            printf("\ntoken plus operation adding up %s + %s \n",tokens[current_index-1].value, tokens[current_index+1].value);
-            factor += parse_factor();
-        } else { //minus operation
-            factor -= parse_factor();
-        }
-    }
-    return factor;
-}
-
-//multiplication
-int  parse_factor(){
-    int multiplicand = parse_multiplicand();
-    while (current_token_type == TOKEN_MULT) {
-        get_next_token();
-        multiplicand *= parse_multiplicand();
-    }
-    return multiplicand;
-}
-
-//function calls ls rs lr rr not xor
-int parse_multiplicand( ){
-    int prop = parse_prop();
-    while(current_token_type == TOKEN_LS ||current_token_type == TOKEN_RS ||current_token_type == TOKEN_LR  ||current_token_type == TOKEN_RR  ||current_token_type == TOKEN_XOR  ||current_token_type == TOKEN_NOT  ||current_token_type == TOKEN_NUM  ||current_token_type == TOKEN_VAR){
-        get_next_token();
-        if(current_token_type == TOKEN_XOR){
-            return parse_xor();
-        }
-        else if(current_token_type == TOKEN_NOT){
-            return parse_not();
-        }
-        else if(current_token_type == TOKEN_NUM){
-            return parse_number();
-        }
-        else if (current_token_type == TOKEN_VAR) {
-            return parse_variable();
-        }
-        else{ //rotations
-            return parse_shift_rotation();
-        }
-    }
-    return prop;
-}
-
-int parse_xor(){
-    int prop;
-    int prop1;
-    int prop2;
-    get_next_token(); // (
-    get_next_token(); // first prop
-    prop1 = parse_prop();
-    get_next_token(); // ,
-    printf("now we have the comma %d",current_token_type);
-    get_next_token(); //second prop
-    prop2 = parse_prop();
-    get_next_token(); // )
-    printf("XORING PROP1 %d AND PROP2  %d BECOMES %d", prop1, prop2, prop1^prop2);
-    prop = prop1 ^ prop2;
-    return prop;
-}
-
-
-
-int parse_not(){
-    int prop;
-    get_next_token(); // (
-    get_next_token(); // first prop
-    prop = parse_prop();
-    get_next_token(); // )
-    printf("NEGATING PROP %d BECOMES %d", prop, ~prop);
-    prop = ~prop;
-    return prop;
-}
-
-
-int parse_shift_rotation(){
-    while(current_token_type == TOKEN_LS ||current_token_type == TOKEN_RS ||current_token_type == TOKEN_LR ||current_token_type == TOKEN_RR){
-        if(current_token_type == TOKEN_LS){
-            return parse_left_shift();
-        }
-        else if(current_token_type == TOKEN_RS){
-            return parse_right_shift();
-        }
-        else if(current_token_type == TOKEN_LR){
-            return parse_left_rotation();
-        }
-        else if(current_token_type == TOKEN_RR){
-            return parse_right_rotation();
-        }
-        //error
-    }
-}
-
-int parse_left_shift(){
-    int prop;
-    get_next_token(); // (
-    get_next_token(); // first prop
-    prop = parse_prop();
-    get_next_token(); // ,
-    get_next_token(); //shift num
-    int num = parse_number();
-    get_next_token(); // )
-    prop = prop << num;
-    return prop;
-}
-
-int parse_right_shift(){
-    int prop;
-    get_next_token(); // (
-    get_next_token(); // first prop
-    prop = parse_prop();
-    get_next_token(); // ,
-    get_next_token(); // shift num
-    int num = parse_number();
-    get_next_token(); // )
-    prop = prop >> num;
-    return prop;
-}
-
-//rotation differs from shift in that it preserves fallen bits by gluing them back on to the other end.
-
-int parse_left_rotation(){
-    int prop;
-    get_next_token(); // (
-    get_next_token(); // first prop
-    prop = parse_prop();
-    get_next_token(); // ,
-    get_next_token(); // rotation num
-    int num = parse_number();
-    get_next_token(); // )
-    prop = (prop << num) | (prop >> (8 - num)); //why did we use 8?
-    return prop;
-}
-
-int parse_right_rotation(){
-    int prop;
-    get_next_token(); // (
-    get_next_token(); // first prop
-    prop = parse_prop();
-    get_next_token(); // ,
-    get_next_token(); // rotation num
-    int num = parse_number();
-    get_next_token(); // )
-    prop = (prop >> num) | (prop << (8 - num));  //why did we use 8? do i need to hardcode another number
-    return prop;
-}
-
-int parse_prop(){
-    int prop;
-    if(current_token_type == TOKEN_NUM){
-        prop = parse_number();
-    }
-    else if(current_token_type == TOKEN_VAR){
-        printf("idnt\n");
-        prop = parse_variable();
-    }
-    return prop;
-}
-int parse_number(){
-    int num;
-    
-    num=atoi(tokens[current_index-1].value);
-    printf("    number expected,  before :%s,now: '%s' then : '%s' \n",tokens[current_index-1].value,tokens[current_index].value,tokens[current_index+1].value);
-    printf("NUMBER OF TOKENS %d, CURRENT INDEX %d", num_tokens,current_index);
-    if(current_index != 0) {
-        get_next_token();
-    }
-    return num;
-}
-
-int parse_variable(){
-    int var;
-    var=0;
-    printf("encountered with a variable (identifier) this is : &s \n",tokens[current_index-1].value);
-    if(current_index != 0) {
-        get_next_token();
-    }
-    return var;
-}
 
 
 int main(){
-
-    char line[257]="";
-    //input line will be stored in here
+    //init_table(Hashtable);
+    char line[257]=""; //input line will be stored in here
     printf("Enter>");
-
     while(fgets(line,sizeof(line),stdin)){
-        printf("Enter>");
 
-        if (line==NULL || line=="12345"){
-            //free the memory
+        if (line==NULL ||strcmp(line,"\n")==0){
+            //free the memory 
             break; //ctrl+d has entered
         }
         else{
-            int numtok = 0;
-            tokenize(line,tokens,&numtok);
-            for(int i = 0; i<257; i++){
-                printf("%s", tokens[i].value);
-            }
-            int result = parse_program(); //not sure of denotation
-            printf("        RESULT: %d  \n", result);
-            //get_next_token();
-            result=0;
-            for(int i =  0; i<257;i++){ //Numtok may be
-                tokens[i].type = NONE;
-            }
-            current_index = 0;
-            continue;
+        Token postfixx[257];
+        Token tokens[257];
+        int numtok=0;
+        tokenize(line,tokens,&numtok);
+        infix_to_postfix(tokens,postfixx);
+        for (int i = 0; i < numtoken; i++) {
+        printf("%s\n", postfixx[i].value);
+         }
+         int res=evaluate_postfix(postfixx);
+         printf("RESULT İS: %d\n",res);
+       }
+        
         }
+        
+        
 
-
-    }//return 0;
-}
-
+    }
 
