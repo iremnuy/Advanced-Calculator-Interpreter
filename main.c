@@ -467,8 +467,15 @@ int evaluate_postfix(Token *postfix) {
          */
         }
 
-        else {
-            printf("Unknown operator: %s\n", op);
+        else { //this where the variables fall
+
+            /**
+             * we have to check whether a variable exists in memory
+             */
+
+            printf("variable operator: %s\n", op);
+            result = lookup(Hashtable,op);
+            stack[++top] = result;
             continue; // Return an error code
         }
     }
@@ -483,22 +490,52 @@ int evaluate_postfix(Token *postfix) {
 
 int main(){
 
+    Hashtable = (table *)malloc(sizeof(table));
+    init_table(Hashtable);
+
+
     char line[257]=""; //input line will be stored in here
     printf("Enter>");
     while(fgets(line,sizeof(line),stdin)){
 
-        if (line==NULL ||strcmp(line,"\n")==0){
+
+        char *pos = strchr(line, '=');
+        if (pos != NULL) { // if there is an assignment statement
+            *pos = '\0'; // replace = with \0
+            char *variable = line; // first part is the variable
+            char *value = pos + 1; // second part is the value
+
+
+            // do something with variable and value
+            Token postfixx[257];
+            Token tokens[257];
+            int numtok = 0;
+            tokenize(value,tokens,&numtok);
+            infix_to_postfix(tokens,postfixx);
+            for (int i = 0; i < numtoken; i++) {
+                printf("%s\n", postfixx[i].value);
+            }
+            int res=evaluate_postfix(postfixx);
+           // printf("RESULT İS: %d\n",res);
+
+
+            insert(Hashtable,variable,res);
+            printf("now our table has %s matched with %d\n", line, lookup(Hashtable,line));
+
+        }
+
+//        else if(isalpha(line)){ //else if a variable is called
+//            /**
+//            * if input has the form  abcd
+//            * so hashtable shit
+//            */
+//        }
+
+        else if (line==NULL ||strcmp(line,"\n")==0){
             //free the memory 
             break; //ctrl+d has entered
         }
-        else{
-
-            Hashtable = (table *)malloc(sizeof(table));
-            init_table(Hashtable);
-            insert(Hashtable,"A",3);
-            printf("now our table has %s matched with %d", "A", lookup(Hashtable,"A"));
-
-
+        else{ //normal expression input
             Token postfixx[257];
             Token tokens[257];
             int numtok = 0;
