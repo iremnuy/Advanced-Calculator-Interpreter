@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <stddef.h>
 #include <stdbool.h>
-
 
 
 //hashtable implementation - needs elaboration
@@ -89,7 +87,7 @@ int lookup(table *table, char *key) {
 int MAX_EXPR_LEN=257;
 typedef enum {
     NONE, //end token of array to understand conclusion,after "%" also can be none
-    NUM, //all numbers 
+    NUM, //all numbers
     OP, //+,-,&,|,*
     IDENT, //identifiers,initally zero
     FUNC_CALL, //for all functions in the format function(arg1,arg2)
@@ -103,32 +101,30 @@ typedef enum {
 } TokenType;
 typedef struct {
     TokenType type;
-    char* value; //string value of the token 
-    char *function_name;   // Name of function 
+    char* value; //string value of the token
+    char *function_name;   // Name of function
     //Token *arguments;  //array for functions arguments just like initial array of all tokens .?
 
 } Token;
-
 Token tokens[257];
 int current_index=0;
 int current_token_type;
 int *num_tokens = 0;
 int old;
 int numtoken;
-
 Token create_token(int type, char* value);
 
- Token* tokenize(char* input,Token tokens[],int* num_tokens) { //input is the given input of user as a whole
+Token* tokenize(char* input,Token tokens[],int* num_tokens) { //input is the given input of user as a whole
 
     int i = 0; //current array location,incremented after each process {
     char curr_char = input[i];
-    
+
     while (curr_char != '\0' && curr_char != '%') {
         if (isdigit(curr_char)) {
             char* start = input + i; //start of the number (ex. 5 for 5674)
             while (isdigit(curr_char)) { //current is a digit
                 i++;
-                curr_char = input[i]; 
+                curr_char = input[i];
             }
             int length = input + i - start;
             char* token_str = (char*) malloc(length + 1);
@@ -137,7 +133,7 @@ Token create_token(int type, char* value);
             tokens[*num_tokens] = create_token(NUM, token_str);
             (*num_tokens)++;
             //free(token_str);
-            
+
         } else if (isalpha(curr_char)) {
             char* start = input + i;
             while (isalnum(curr_char) && curr_char != ' ') {
@@ -148,46 +144,46 @@ Token create_token(int type, char* value);
             char* token_str = (char*) malloc(length + 1);
             strncpy(token_str, start, length);
             token_str[length] = '\0';
-            if (strcmp(token_str, "ls") == 0 || strcmp(token_str, "rs") == 0 || 
-                strcmp(token_str, "xor") == 0 || strcmp(token_str, "lr") == 0 || 
+            if (strcmp(token_str, "ls") == 0 || strcmp(token_str, "rs") == 0 ||
+                strcmp(token_str, "xor") == 0 || strcmp(token_str, "lr") == 0 ||
                 strcmp(token_str, "rr") == 0 || strcmp(token_str, "not") == 0) {
                 tokens[*num_tokens] = create_token(FUNC_CALL, token_str);
             } else {
                 tokens[*num_tokens] = create_token(IDENT, token_str);
-                
+
             }
-           
+
             //free(token_str);
             (*num_tokens)++;
 
-            
+
         } else if (curr_char == ',') {
-    char* token_str = (char*) malloc(2);
-    token_str[0] = curr_char;
-    token_str[1] = '\0';
-    tokens[*num_tokens] = create_token(COMMA,token_str);
-    (*num_tokens)++;
-    i++;
-    curr_char = input[i];
-    //free(token_str);
-}     
-else if (curr_char == '=') {
-    char* token_str = (char*) malloc(2);
-    token_str[0] = curr_char;
-    token_str[1] = '\0';
-    tokens[*num_tokens] = create_token(ASSIGN, token_str);
-    (*num_tokens)++;
-    i++;
-    curr_char = input[i];
-    //free(token_str);
-}     
+            char* token_str = (char*) malloc(2);
+            token_str[0] = curr_char;
+            token_str[1] = '\0';
+            tokens[*num_tokens] = create_token(COMMA,token_str);
+            (*num_tokens)++;
+            i++;
+            curr_char = input[i];
+            //free(token_str);
+        }
+        else if (curr_char == '=') {
+            char* token_str = (char*) malloc(2);
+            token_str[0] = curr_char;
+            token_str[1] = '\0';
+            tokens[*num_tokens] = create_token(ASSIGN, token_str);
+            (*num_tokens)++;
+            i++;
+            curr_char = input[i];
+            //free(token_str);
+        }
         else if (curr_char == '+' || curr_char == '-' || curr_char == '*'  )
-                      {
+        {
             char* token_str = (char*) malloc(2);
             token_str[0] = curr_char;
             token_str[1] = '\0';
             tokens[*num_tokens] =create_token(OP, token_str);
-             //create token returns a pointer this line assigns the pointers reference token to tokens array
+            //create token returns a pointer this line assigns the pointers reference token to tokens array
             (*num_tokens)++;
             i++;
             curr_char = input[i];
@@ -198,7 +194,7 @@ else if (curr_char == '=') {
             token_str[0] = curr_char;
             token_str[1] = '\0';
             tokens[*num_tokens] =create_token(LPAR, token_str);
-             //create token returns a pointer this line assigns the pointers reference token to tokens array
+            //create token returns a pointer this line assigns the pointers reference token to tokens array
             (*num_tokens)++;
             i++;
             curr_char = input[i];
@@ -211,7 +207,7 @@ else if (curr_char == '=') {
             token_str[0] = curr_char;
             token_str[1] = '\0';
             tokens[*num_tokens] =create_token(RPAR, token_str);
-             //create token returns a pointer this line assigns the pointers reference token to tokens array
+            //create token returns a pointer this line assigns the pointers reference token to tokens array
             (*num_tokens)++;
             i++;
             curr_char = input[i];
@@ -223,7 +219,7 @@ else if (curr_char == '=') {
             token_str[0] = curr_char;
             token_str[1] = '\0';
             tokens[*num_tokens] =create_token(AND, token_str);
-             //create token returns a pointer this line assigns the pointers reference token to tokens array
+            //create token returns a pointer this line assigns the pointers reference token to tokens array
             (*num_tokens)++;
             i++;
             curr_char = input[i];
@@ -235,7 +231,7 @@ else if (curr_char == '=') {
             token_str[0] = curr_char;
             token_str[1] = '\0';
             tokens[*num_tokens] =create_token(OR, token_str);
-             //create token returns a pointer this line assigns the pointers reference token to tokens array
+            //create token returns a pointer this line assigns the pointers reference token to tokens array
             (*num_tokens)++;
             i++;
             curr_char = input[i];
@@ -250,16 +246,16 @@ else if (curr_char == '=') {
         }
     }
     for (int i = 0; i < *num_tokens; i++) {
-    //Token token = tokens[i];
+        //Token token = tokens[i];
 
-    
-    //printf("Token %d: type=%d, value=%s \n", i, tokens[i].type,tokens[i].value);
-    numtoken=*num_tokens;
-}
+
+        //printf("Token %d: type=%d, value=%s \n", i, tokens[i].type,tokens[i].value);
+        numtoken=*num_tokens;
+    }
     return tokens;
 
 
- }
+}
 
 
 
@@ -277,22 +273,23 @@ Token create_token(int type, char* value) {
 
 
 int precedence(char *op) {
+    printf("precdence called this is string: %s",op);
     printf("precedence called this is string: %s",op);
-    if  (strcmp(op, "=") == 0)
-        return 6;
 
+    if  (strcmp(op, "=") == 0)
+        return 7;
 
     else if (strcmp(op, "(") == 0 || strcmp(op, ")") == 0)
         return 0;
 
-//     else if (strcmp(op, ",") == 0)
-//        return 4;
+    else if (strcmp(op, ",") == 0)
+        return 6;
 
     else if (strcmp(op, "xor") == 0 || strcmp(op, "not") == 0 || strcmp(op, "ls") == 0 || strcmp(op, "rs") == 0 || strcmp(op, "lr") == 0 || strcmp(op, "rr") == 0)
         return 5;
 
     else if (strcmp(op, "*") == 0){
-    printf("multiplication precedence\n");
+        printf("multiplication precedence\n");
         return 4;
     }
     else if (strcmp(op, "+") == 0 || strcmp(op, "-") ==0)
@@ -322,7 +319,7 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
             postfix[j++].value = (tokens[i].value);
             printf("this is assigned to postfix j : %s",tokens[i].value);
         }
-        // If the current character is an operator, add it to the stack
+            // If the current character is an operator, add it to the stack
         else if (strcmp(tokens[i].value, "(") == 0) {
             stack[++top].value = (tokens[i].value);
         }
@@ -344,7 +341,7 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
                     top--; //pass the comma and reach the function
                     continue;
                 }
-               
+
                 postfix[j++].value = stack[top--].value;
             }
             // Push the current operator onto the stack
@@ -376,115 +373,108 @@ int evaluate_postfix(Token *postfix) {
     int top = -1;
     int i;
     for (i = 0; i<numofpost; i++) {
-    // If the current character is an operand, push it onto the stack
-    if (isdigit(*postfix[i].value)) {
-        int operand = atoi(postfix[i].value);
-        stack[++top] = operand;
+        // If the current character is an operand, push it onto the stack
+        if (isdigit(*postfix[i].value)) {
+            int operand = atoi(postfix[i].value);
+            stack[++top] = operand;
+        }
+        else {
+            int op1, op2, result;
+            char op[32]="";
+            int j = 0;
+            strcpy(op, postfix[i].value);
+            printf("this is op %s",op);
+            if (strcmp(op, "xor") == 0) {
+                printf("xor catch\n");
+                op1 = (stack[top--]);
+                printf("op1: %d\n",op1);
+                op2 = (stack[top--]);
+                printf("op2: %d\n",op2);
+                result = op1 ^ op2;
+                stack[++top] = result; //integerı stack token valuesu vey bir sekilde atamak lazım
+            }
+            else if (strcmp(op, "not") == 0) {
+                op1 = stack[top--];
+                result = ~op1;
+                stack[++top] = result;
+            }
+            else if (strcmp(op, "*") == 0) {
+                op1 = stack[top--];
+                op2 = stack[top--];
+                result = op2 * op1;
+                stack[++top] = result;
+            }
+            else if (strcmp(op, "+") == 0) {
+                op1 = stack[top--];
+                op2 = stack[top--];
+                result = op2 + op1;
+                printf("lastly result %d \n",result);
+                stack[++top] = result;
+            }
+            else if (strcmp(op, "-") == 0) {
+                op1 = stack[top--];
+                op2 = stack[top--];
+                result = op2 - op1;
+                stack[++top] = result;
+            }
+            else if (strcmp(op, "&") == 0) {
+                op1 = stack[top--];
+                op2 = stack[top--];
+                result =op2&op1;
+                stack[++top] = result;
+            }
+            else if (strcmp(op, "|") == 0) {
+                op1 = stack[top--];
+                op2 = stack[top--];
+                result=op2|op1;
+                stack[++top] = result;
+            }
+            else if (strcmp(op, "lr") == 0) {
+                op1 = stack[top--];
+                op2 = stack[top--];
+                result = (op2 << op1) | (op2 >> (sizeof(op2) * CHAR_BIT - op1));
+                stack[++top] = result;
+            }
+            else if (strcmp(op, "rr") == 0) {
+                op1 = stack[top--];
+                op2 = stack[top--];
+                result = (op2 >> op1) | (op2 << (sizeof(op2) * CHAR_BIT - op1));
+                stack[++top] = result;
+            }
+            else if (strcmp(op, "ls") == 0) {
+                op1 = stack[top--];
+                op2 = stack[top--];
+                result = (op2 << op1);
+                stack[++top] = result;
+            }
+            else if (strcmp(op, "rs") == 0) {
+                op1 = stack[top--];
+                op2 = stack[top--];
+                result = (op2 >> op1);
+                stack[++top] = result;
+            }
+
+            else if(strcmp(op, "(") != 0 && strcmp(op, ")") != 0 && strcmp(op, ",") != 0){ //this where the variable inputs fall, exclduing the paranthesis and commas
+
+                //will top-- be used
+
+                /**
+                 * we have to check whether a variable exists in memory
+                 */
+
+                printf("variable operator: %s\n", op);
+                result = lookup(Hashtable,op);
+                stack[++top] = result;
+
+            }
+        }
+
     }
-    else {
-        int op1, op2, result;
-        char op[32]="";
-        int j = 0;
-        strcpy(op, postfix[i].value);
-        printf("this is op %s",op);
-        if (strcmp(op, "xor") == 0) {
-            printf("xor catch\n");
-            op1 = (stack[top--]);
-            printf("op1: %d\n",op1);
-            op2 = (stack[top--]);
-             printf("op2: %d\n",op2);
-            result = op1 ^ op2;
-            stack[++top] = result; //integerı stack token valuesu vey bir sekilde atamak lazım
-        }
-
-        else if (strcmp(op, "not") == 0) {
-            op1 = stack[top--];
-            result = ~op1;
-            stack[++top] = result;
-        }
-        else if (strcmp(op, "*") == 0) {
-            op1 = stack[top--];
-            op2 = stack[top--];
-            result = op2 * op1;
-            stack[++top] = result;
-        }
-        else if (strcmp(op, "+") == 0) {
-            op1 = stack[top--];
-            op2 = stack[top--];
-            result = op2 + op1;
-            printf("lastly result %d \n",result);
-            stack[++top] = result;
-        }
-        else if (strcmp(op, "-") == 0) {
-            op1 = stack[top--];
-            op2 = stack[top--];
-            result = op2 - op1;
-            stack[++top] = result;
-        }
-        else if (strcmp(op, "&") == 0) {
-            op1 = stack[top--];
-            op2 = stack[top--];
-            result =op2&op1;
-            stack[++top] = result;
-        }
-        else if (strcmp(op, "|") == 0) {
-            op1 = stack[top--];
-            op2 = stack[top--];
-            result=op2|op1;
-            stack[++top] = result;
-        }
-        else if (strcmp(op, "lr") == 0) {
-            op1 = stack[top--];
-            op2 = stack[top--];
-            result = (op2 << op1) | (op2 >> (sizeof(op2) * CHAR_BIT - op1));
-            stack[++top] = result;
-        }
-        else if (strcmp(op, "rr") == 0) {
-            op1 = stack[top--];
-            op2 = stack[top--];
-            result = (op2 >> op1) | (op2 << (sizeof(op2) * CHAR_BIT - op1));
-            stack[++top] = result;
-        }
-        else if (strcmp(op, "ls") == 0) {
-            op1 = stack[top--];
-            op2 = stack[top--];
-            result = (op2 << op1);
-            stack[++top] = result;
-        }
-        else if (strcmp(op, "rs") == 0) {
-            op1 = stack[top--];
-            op2 = stack[top--];
-            result = (op2 >> op1);
-            stack[++top] = result;
-        }
-
-        //assigment case
-        else if (strcmp(op, "=") == 0) {
-            op1 = stack[top--];
-            op2 = stack[top--];
-        /**
-         * CODE HERE
-         */
-        }
-
-        else { //this where the variables fall
-
-            /**
-             * we have to check whether a variable exists in memory
-             */
-
-            printf("variable operator: %s\n", op);
-            result = lookup(Hashtable,op);
-            stack[++top] = result;
-            continue; // Return an error code
-        }
-    }
-   
-}
- return stack[top]; 
+    return stack[top];
 
 
 }
+
 //for stripping input
 void strip_whitespace(char *str) {
     int i, j;
@@ -525,19 +515,12 @@ int main(){
             continue;
         }
 
-        //2)lines starting with operations. i.e unary cases like +1+b
+            //2)lines starting with operations. i.e unary cases like +1+b
         else if(line[0] == '+' ||line[0] == '-' || line[0] == '*' || line[0] == '&'|| line[0] == '|'){
             printf("Error!\n");
             printf(">");
             continue;
         }
-
-//        //3)
-//        else if(){
-//            printf("Error!\n");
-//            printf(">");
-//            continue;
-//        }
 
 
         char *pos = strchr(line, '=');
@@ -558,7 +541,7 @@ int main(){
                 printf("%s\n", postfixx[i].value);
             }
             int res=evaluate_postfix(postfixx);
-           // printf("RESULT İS: %d\n",res);
+            // printf("RESULT İS: %d\n",res);
 
 
             insert(Hashtable,variable,res);
@@ -575,18 +558,17 @@ int main(){
             tokenize(line,tokens,&numtok);
             infix_to_postfix(tokens,postfixx);
             for (int i = 0; i < numtoken; i++) {
-            printf("%s\n", postfixx[i].value);
-             }
-             int res=evaluate_postfix(postfixx);
-             printf("RESULT İS: %d\n",res);
+                printf("%s\n", postfixx[i].value);
+            }
+            int res=evaluate_postfix(postfixx);
+            printf("RESULT İS: %d\n",res);
             printf(">");
             continue;
-       }
-
-
         }
 
-    printf("end of program");
 
     }
 
+    printf("end of program");
+
+}
