@@ -45,7 +45,7 @@ void init_table(table *table) {
     }
 }
 
-void insert(table *table, char *key, int value) {
+void insert(table *table, char *key, int value) { 
     int index = hash_function(key);
     int i = index;
     while (table->elements[i].key != NULL && strcmp(table->elements[i].key, "") != 0) {
@@ -274,7 +274,6 @@ Token create_token(int type, char* value) {
 
 int precedence(char *op) {
     printf("precdence called this is string: %s",op);
-    printf("precedence called this is string: %s",op);
 
     if  (strcmp(op, "=") == 0)
         return 7;
@@ -305,6 +304,19 @@ int precedence(char *op) {
 }
 int numofpost;
 
+
+
+int allAlpha(char* str) { //checks all the string rather than s string calculator
+    int i = 0;
+    while (str[i]) {
+        if (!isalpha(str[i])) {
+            return 0;
+        }
+        i++;
+    }
+    return 1;
+}
+
 void infix_to_postfix(Token *tokens, Token *postfix) {
     printf("evaluating infix to postfix\n");
     Token stack[MAX_EXPR_LEN];
@@ -314,14 +326,14 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
     for (i = 0, j = 0; i<numtoken; i++) {
         printf("for this is token val :%s \n",tokens[i].value);
         // If the current character is an operand, add it to the postfix expression
-        if (tokens[i].type!=4 && (isdigit((int) *(tokens[i].value)) || isalpha((int) *(tokens[i].value)))) {
+        if (tokens[i].type!=4 && (isdigit((int) *(tokens[i].value)) || allAlpha((tokens[i].value)))) {
             printf("type num is %d f\n",tokens[i].type);
             postfix[j++].value = (tokens[i].value);
-            printf("this is assigned to postfix j : %s",tokens[i].value);
+            printf("this is assigned to postfix : %s",tokens[i].value);
         }
             // If the current character is an operator, add it to the stack
         else if (strcmp(tokens[i].value, "(") == 0) {
-            stack[++top].value = (tokens[i].value);
+            stack[++top].value = (tokens[i].value); // "(" dan sonraki her şeyi ")" görene kadar ekle
         }
         else if (strcmp(tokens[i].value, ")") == 0) {
             // Pop operators off the stack and add them to the postfix expression until a matching left parenthesis is encountered
@@ -335,9 +347,13 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
             printf("precedence ölçüm\n");
             printf("top this is: %d",top);
             // Pop operators off the stack and add them to the postfix expression until an operator with lower precedence is encountered
+            
+            
+            
             while (top >= 0 && precedence(stack[top].value) >= precedence(tokens[i].value)) {
                 printf("precdence kosulu oldu tamam\n");
                 if (strcmp(stack[top].value,",")==0){
+                printf("virgül var\n");
                     top--; //pass the comma and reach the function
                     continue;
                 }
@@ -376,11 +392,11 @@ int evaluate_postfix(Token *postfix) {
         // If the current character is an operand, push it onto the stack
         if (isdigit(*postfix[i].value)) {
             int operand = atoi(postfix[i].value);
-            stack[++top] = operand;
+            stack[++top] = operand; //add all operands to stack 
         }
         else {
             int op1, op2, result;
-            char op[32]="";
+            char op[32]=""; //string to store operators,function names or variable names to print out result of that variable
             int j = 0;
             strcpy(op, postfix[i].value);
             printf("this is op %s",op);
@@ -453,27 +469,29 @@ int evaluate_postfix(Token *postfix) {
                 result = (op2 >> op1);
                 stack[++top] = result;
             }
-
-            else if(strcmp(op, "(") != 0 && strcmp(op, ")") != 0 && strcmp(op, ",") != 0){ //this where the variable inputs fall, exclduing the paranthesis and commas
-
-                //will top-- be used
-
-                /**
-                 * we have to check whether a variable exists in memory
-                 */
-
-                printf("variable operator: %s\n", op);
-                result = lookup(Hashtable,op);
+            else if (isalpha(*postfix[i].value) && strcmp(postfix[i].value,op)==0 ){ //then it is not a function name bec we checked for it before,it is a variable either declared or not
+            printf("variable operator: %s\n", op); //sadece bir variable görmesi yetmiyor bu gördüğünün operand ismi ile ynı olması lazım 
+                result = lookup(Hashtable,op); //bazen mesela a=3%yorum durumunda %yorum kısmı buraya giriyor ve op a iken o sıradaki postfix[i].value %yorum olmasına rağmen a yı printliyor
                 stack[++top] = result;
 
             }
-        }
+            else if (strcmp(op, ",") == 0){
+                //top--;
+                continue;
 
-    }
+            }
+
+            else {
+                printf("Unknown operator.Error!: %s\n", op);
+                break;// Return an error code
+            }
+        } //ELSE IF BITTI 
+
+    } // FOR BITTI
     return stack[top];
 
 
-}
+} // CIKIS
 
 //for stripping input
 void strip_whitespace(char *str) {
@@ -487,6 +505,31 @@ void strip_whitespace(char *str) {
 }
 
 
+char* trim(char* str) {
+    char* end;
+
+    // Trim leading whitespace
+    while (isspace((unsigned char)*str)) {
+        str++;
+    }
+
+    if (*str == 0) { // All spaces?
+        return str;
+    }
+
+    // Trim trailing whitespace
+    end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char)*end)) {
+        end--;
+    }
+
+    // Write new null terminator
+    *(end + 1) = '\0';
+
+    return str;
+}
+
+
 
 int main(){
 
@@ -496,13 +539,14 @@ int main(){
 
     char line[257]=""; //input line will be stored in here
     printf(">");
-    while(fgets(line,sizeof(line),stdin) != NULL){   //CTRL^D inputs are checked by != null... apperently this works on unix sistems
+    while(fgets(line,sizeof(line),stdin) != NULL ){   //CTRL^D inputs are checked by != null... apperently this works on unix sistems
 
 
         //blankline inputs
         if(strcmp(line,"\n")==0){
-            printf(">");
-            continue;
+            //printf(">");
+            //continue;
+            break; //for easily terminate in windows doğrusu yukardaki 
         }
 
 
@@ -521,6 +565,10 @@ int main(){
             printf(">");
             continue;
         }
+        char *commentPos=strchr(line,'%');
+            if (commentPos!=NULL){
+                *commentPos='\0'; //trim the expression to the % part included \0 
+            }
 
 
         char *pos = strchr(line, '=');
@@ -529,7 +577,16 @@ int main(){
             char *variable = line; // first part is the variable
             char *value = pos + 1; // second part is the value
 
-            strip_whitespace(variable);
+            variable=trim(variable); //sağ ve soldan boşlukları kırpılmış variable a  =3 çalışır ama a b = 3 çalışmaz
+            value=trim(value);
+            if (!allAlpha(variable)){
+                printf("Given variable is not valid\n");
+                printf("Error!\n");
+                printf(">");
+                continue;
+            }
+            printf("variable after trimming and checking: %s",variable);
+
 
             // do something with variable and value
             Token postfixx[257];
@@ -542,10 +599,9 @@ int main(){
             }
             int res=evaluate_postfix(postfixx);
             // printf("RESULT İS: %d\n",res);
-
-
-            insert(Hashtable,variable,res);
-            printf("now our table has %s matched with %d\n", line, lookup(Hashtable,line));
+                insert(Hashtable,variable,res);
+            
+            printf("now our table has %s matched with %d\n", variable, lookup(Hashtable,variable)); //burası line dı variable yaptım çünkü line "    a=4 için boşluklu versiyon "
             printf(">");
             continue;
 
