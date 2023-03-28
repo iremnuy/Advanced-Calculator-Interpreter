@@ -20,10 +20,34 @@ typedef struct {
 
 table *Hashtable;
 
+int error = 0;
 int hash_function(char *key);
 void init_table(table *table);
 void insert(table *table, char *key, int value);
 void strip_whitespace(char *str);
+int is_balanced(char *str);
+
+
+
+int is_balanced(char *str) { //paranthesis checker for input strings
+    int len = strlen(str);
+    char stack[len];
+    int top = -1;
+    for (int i = 0; i < len; i++) {
+        if (str[i] == '(') {
+            stack[++top] = str[i];
+        } else if (str[i] == ')') {
+            if (top == -1) {
+                return 0;
+            } else if (str[i] == ')' && stack[top] == '(') {
+                top--;
+            } else {
+                return 0;
+            }
+        }
+    }
+    return (top == -1);
+}
 
 
 
@@ -45,7 +69,7 @@ void init_table(table *table) {
     }
 }
 
-void insert(table *table, char *key, int value) { 
+void insert(table *table, char *key, int value) {
     int index = hash_function(key);
     int i = index;
     while (table->elements[i].key != NULL && strcmp(table->elements[i].key, "") != 0) {
@@ -148,6 +172,10 @@ Token* tokenize(char* input,Token tokens[],int* num_tokens) { //input is the giv
                 strcmp(token_str, "xor") == 0 || strcmp(token_str, "lr") == 0 ||
                 strcmp(token_str, "rr") == 0 || strcmp(token_str, "not") == 0) {
                 tokens[*num_tokens] = create_token(FUNC_CALL, token_str);
+                //in addition directly after the function call, if no left paranthesis is used it is an error. xor(
+                if( strcmp(tokens[*num_tokens+1].value, "(") != 0){
+                    error = 1;
+                }
             } else {
                 tokens[*num_tokens] = create_token(IDENT, token_str);
 
@@ -347,13 +375,13 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
             printf("precedence ölçüm\n");
             printf("top this is: %d",top);
             // Pop operators off the stack and add them to the postfix expression until an operator with lower precedence is encountered
-            
-            
-            
+
+
+
             while (top >= 0 && precedence(stack[top].value) >= precedence(tokens[i].value)) {
                 printf("precdence kosulu oldu tamam\n");
                 if (strcmp(stack[top].value,",")==0){
-                printf("virgül var\n");
+                    printf("virgül var\n");
                     top--; //pass the comma and reach the function
                     continue;
                 }
@@ -392,7 +420,7 @@ int evaluate_postfix(Token *postfix) {
         // If the current character is an operand, push it onto the stack
         if (isdigit(*postfix[i].value)) {
             int operand = atoi(postfix[i].value);
-            stack[++top] = operand; //add all operands to stack 
+            stack[++top] = operand; //add all operands to stack
         }
         else {
             int op1, op2, result;
@@ -470,7 +498,7 @@ int evaluate_postfix(Token *postfix) {
                 stack[++top] = result;
             }
             else if (isalpha(*postfix[i].value) && strcmp(postfix[i].value,op)==0 ){ //then it is not a function name bec we checked for it before,it is a variable either declared or not
-            printf("variable operator: %s\n", op); //sadece bir variable görmesi yetmiyor bu gördüğünün operand ismi ile ynı olması lazım 
+                printf("variable operator: %s\n", op); //sadece bir variable görmesi yetmiyor bu gördüğünün operand ismi ile ynı olması lazım
                 result = lookup(Hashtable,op); //bazen mesela a=3%yorum durumunda %yorum kısmı buraya giriyor ve op a iken o sıradaki postfix[i].value %yorum olmasına rağmen a yı printliyor
                 stack[++top] = result;
 
@@ -485,25 +513,14 @@ int evaluate_postfix(Token *postfix) {
                 printf("Unknown operator.Error!: %s\n", op);
                 break;// Return an error code
             }
-        } //ELSE IF BITTI 
+        } //ELSE IF BITTI
 
     } // FOR BITTI
+
     return stack[top];
 
 
 } // CIKIS
-
-//for stripping input
-void strip_whitespace(char *str) {
-    int i, j;
-    for (i = 0, j = 0; str[i]; i++) {
-        if (!isspace(str[i])) {
-            str[j++] = str[i];
-        }
-    }
-    str[j] = '\0';
-}
-
 
 char* trim(char* str) {
     char* end;
@@ -530,7 +547,6 @@ char* trim(char* str) {
 }
 
 
-
 int main(){
 
     Hashtable = (table *)malloc(sizeof(table));
@@ -546,7 +562,7 @@ int main(){
         if(strcmp(line,"\n")==0){
             //printf(">");
             //continue;
-            break; //for easily terminate in windows doğrusu yukardaki 
+            break; //for easily terminate in windows doğrusu yukardaki
         }
 
 
@@ -559,16 +575,24 @@ int main(){
             continue;
         }
 
-            //2)lines starting with operations. i.e unary cases like +1+b
+        //2)lines starting with operations. i.e unary cases like +1+b
         else if(line[0] == '+' ||line[0] == '-' || line[0] == '*' || line[0] == '&'|| line[0] == '|'){
             printf("Error!\n");
             printf(">");
             continue;
         }
         char *commentPos=strchr(line,'%');
-            if (commentPos!=NULL){
-                *commentPos='\0'; //trim the expression to the % part included \0 
-            }
+        if (commentPos!=NULL){
+            *commentPos='\0'; //trim the expression to the % part included \0
+        }
+
+
+        //3)unbalanced paranthesis expressions
+        else if(!is_balanced(line)){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
 
 
         char *pos = strchr(line, '=');
@@ -593,14 +617,26 @@ int main(){
             Token tokens[257];
             int numtok = 0;
             tokenize(value,tokens,&numtok);
+
+
+//            //erroneous tokenization idea
+//            if(error == 1){
+//                printf("Error!\n");
+//                printf(">");
+//                error = 0; //reset
+//                continue;
+//            }
+
+
+
             infix_to_postfix(tokens,postfixx);
             for (int i = 0; i < numtoken; i++) {
                 printf("%s\n", postfixx[i].value);
             }
             int res=evaluate_postfix(postfixx);
             // printf("RESULT İS: %d\n",res);
-                insert(Hashtable,variable,res);
-            
+            insert(Hashtable,variable,res);
+
             printf("now our table has %s matched with %d\n", variable, lookup(Hashtable,variable)); //burası line dı variable yaptım çünkü line "    a=4 için boşluklu versiyon "
             printf(">");
             continue;
@@ -617,8 +653,11 @@ int main(){
                 printf("%s\n", postfixx[i].value);
             }
             int res=evaluate_postfix(postfixx);
+
+
             printf("RESULT İS: %d\n",res);
             printf(">");
+
             continue;
         }
 
