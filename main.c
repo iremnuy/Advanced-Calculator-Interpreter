@@ -26,7 +26,8 @@ void init_table(table *table);
 void insert(table *table, char *key, int value);
 void strip_whitespace(char *str);
 int is_balanced(char *str);
-
+int is_valid_function(char *str);
+int check_function(char *line, char *function_name);
 
 
 int is_balanced(char *str) { //paranthesis checker for input strings
@@ -546,7 +547,59 @@ char* trim(char* str) {
     return str;
 }
 
+int is_valid_function(char *str){
+    int degree = 0;
+    int validness = 0;
+    for (int i = 0; i < strlen(str); i++) {
+        if (str[i] == '(') {
+            degree++;
+        } else if (str[i] == ')') {
+            degree--;
+        } else if (str[i] == ',' && degree == 1) {
+            validness = 1;
+        }
+    }
 
+    if(degree == 0){
+        return validness; //valid.
+        //we saw a comma and the paranthesis closed.
+    }
+    return 0;
+}
+
+int check_function(char *line, char *function_name){
+    char copyline[strlen(line)];
+    strcpy(copyline, line);
+    char *func_pos = strstr(copyline, function_name);
+
+    int broken_function = 0;
+    while(func_pos != NULL) {
+        func_pos = strstr(func_pos, function_name);
+        if (func_pos != NULL) {
+            func_pos = func_pos + 3; // second part is the value
+            printf("here\n");
+            printf("copyline is ... %s\n",func_pos);
+            int valid_function = is_valid_function(func_pos);
+            if(valid_function == 1){
+                printf("valid\n");
+                func_pos = strstr(func_pos, function_name);
+                continue;
+            }
+            else{
+                broken_function = 1;
+                break;
+            }
+        }
+    }
+
+    if(broken_function){
+        return 0;
+    }
+    else{
+        return 1;
+    }
+
+}
 int main(){
 
     Hashtable = (table *)malloc(sizeof(table));
@@ -581,6 +634,7 @@ int main(){
             printf(">");
             continue;
         }
+
         char *commentPos=strchr(line,'%');
         if (commentPos!=NULL){
             *commentPos='\0'; //trim the expression to the % part included \0
@@ -595,6 +649,40 @@ int main(){
         }
 
 
+        //4) broken function calls. We need to evalute the whole strng
+
+        //we will need to do this 5 times...
+        else if(!check_function(line,"xor")){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+
+        else if(!check_function(line,"ls")){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+        else if(!check_function(line,"rs")){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+        else if(!check_function(line,"rr")){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+        else if(!check_function(line,"lr")){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+
+        //function name checking ends.
+
+
+        //assigment check
         char *pos = strchr(line, '=');
         if (pos != NULL) { // if there is an assignment statement
             *pos = '\0'; // replace = with \0
@@ -609,6 +697,42 @@ int main(){
                 printf(">");
                 continue;
             }
+            else if (strcmp("xor",variable)==0){
+                printf("reserved keyword\n");
+                printf("Error!\n");
+                printf(">");
+                continue;
+            }
+            else if (strcmp("ls",variable)==0){
+                printf("reserved keyword\n");
+                printf("Error!\n");
+                printf(">");
+                continue;
+            }
+            else if (strcmp("rs",variable)==0){
+                printf("reserved keyword\n");
+                printf("Error!\n");
+                printf(">");
+                continue;
+            }
+            else if (strcmp("rr",variable)==0){
+                printf("reserved keyword\n");
+                printf("Error!\n");
+                printf(">");
+                continue;
+            }
+            else if (strcmp("lr",variable)==0){
+                printf("reserved keyword\n");
+                printf("Error!\n");
+                printf(">");
+                continue;
+            }
+            else if (strcmp("not",variable)==0){
+                printf("reserved keyword\n");
+                printf("Error!\n");
+                printf(">");
+                continue;
+            }
             printf("variable after trimming and checking: %s",variable);
 
 
@@ -617,17 +741,6 @@ int main(){
             Token tokens[257];
             int numtok = 0;
             tokenize(value,tokens,&numtok);
-
-
-//            //erroneous tokenization idea
-//            if(error == 1){
-//                printf("Error!\n");
-//                printf(">");
-//                error = 0; //reset
-//                continue;
-//            }
-
-
 
             infix_to_postfix(tokens,postfixx);
             for (int i = 0; i < numtoken; i++) {
@@ -643,7 +756,11 @@ int main(){
 
         }
 
-        else{ //normal expression input exists
+
+
+
+        else{ //normal expression input exists. no assignment statement
+
             Token postfixx[257];
             Token tokens[257];
             int numtok = 0;
