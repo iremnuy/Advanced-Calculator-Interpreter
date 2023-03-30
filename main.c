@@ -24,7 +24,6 @@ int error = 0;
 int hash_function(char *key);
 void init_table(table *table);
 void insert(table *table, char *key, int value);
-void strip_whitespace(char *str);
 int is_balanced(char *str);
 int is_valid_function(char *str);
 int check_function(char *line, char *function_name);
@@ -518,10 +517,16 @@ int evaluate_postfix(Token *postfix) {
 
     } // FOR BITTI
 
+    printf("Evaluating for bitti ve top böyle kldı : %d",top);
+    if(top<0){
+        printf("Error!\n");
+        return -33;
+    }
     return stack[top];
 
 
 } // CIKIS
+
 
 char* trim(char* str) {
     char* end;
@@ -572,11 +577,13 @@ int check_function(char *line, char *function_name){
     strcpy(copyline, line);
     char *func_pos = strstr(copyline, function_name);
 
+    int namesize = strlen(function_name);
+
     int broken_function = 0;
     while(func_pos != NULL) {
         func_pos = strstr(func_pos, function_name);
         if (func_pos != NULL) {
-            func_pos = func_pos + 3; // second part is the value
+            func_pos = func_pos + namesize; // second part is the value
             printf("here\n");
             printf("copyline is ... %s\n",func_pos);
             int valid_function = is_valid_function(func_pos);
@@ -613,9 +620,9 @@ int main(){
 
         //blankline inputs
         if(strcmp(line,"\n")==0){
-            //printf(">");
-            //continue;
-            break; //for easily terminate in windows doğrusu yukardaki
+            printf(">");
+            continue;
+            //for easily terminate in windows doğrusu yukardaki
         }
 
 
@@ -743,6 +750,16 @@ int main(){
             tokenize(value,tokens,&numtok);
 
             infix_to_postfix(tokens,postfixx);
+
+            //erroneous tokenization idea
+            if(error == 1){
+                printf("Error!\n");
+                printf(">");
+                error = 0; //reset
+                continue;
+            }
+
+
             for (int i = 0; i < numtoken; i++) {
                 printf("%s\n", postfixx[i].value);
             }
@@ -771,6 +788,12 @@ int main(){
             }
             int res=evaluate_postfix(postfixx);
 
+            if(error == 1){
+                printf("Error!\n");
+                printf(">");
+                error = 0; //reset
+                continue;
+            }
 
             printf("RESULT İS: %d\n",res);
             printf(">");
@@ -778,9 +801,12 @@ int main(){
             continue;
         }
 
-
     }
 
     printf("end of program");
 
 }
+
+/**
+* isvalid function modifiye edilip 3(+)4 tarzı işlemlerden korumaya alınacak.
+*/
