@@ -20,7 +20,6 @@ typedef struct {
 
 table *Hashtable;
 
-int CHAR_BIT = 8;
 int error = 0;
 int hash_function(char *key);
 void init_table(table *table);
@@ -80,6 +79,7 @@ void insert(table *table, char *key, int value) {
         }
         i = (i + 1) % table->size;
         if (i == index) {
+            printf("Table is full.\n");
             return;
         }
     }
@@ -97,9 +97,11 @@ int lookup(table *table, char *key) {
         }
         i = (i + 1) % table->size;
         if (i == index) {
+            printf("Key not found.\n");
             return 0;
         }
     }
+    printf("Key not found.\n");
     return 0;
 }
 
@@ -171,9 +173,11 @@ Token* tokenize(char* input,Token tokens[],int* num_tokens) { //input is the giv
                 strcmp(token_str, "rr") == 0 || strcmp(token_str, "not") == 0) {
                 tokens[*num_tokens] = create_token(FUNC_CALL, token_str);
                 //in addition directly after the function call, if no left paranthesis is used it is an error. xor(
-                
+                if( strcmp(tokens[*num_tokens+1].value, "(") != 0){
+                    error = 1;
+                }
             } else {
-                tokens[*num_tokens] = create_token(IDENT, token_str);//string is not a functiopn name
+                tokens[*num_tokens] = create_token(IDENT, token_str);
 
             }
 
@@ -267,7 +271,6 @@ Token* tokenize(char* input,Token tokens[],int* num_tokens) { //input is the giv
         else {
             i++;
             curr_char = input[i];
-
         }
     }
     for (int i = 0; i < *num_tokens; i++) {
@@ -307,7 +310,7 @@ int precedence(char *op) {
         return 0;
 
     else if (strcmp(op, ",") == 0)
-        return 1;
+        return 6;
 
     else if (strcmp(op, "xor") == 0 || strcmp(op, "not") == 0 || strcmp(op, "ls") == 0 || strcmp(op, "rs") == 0 || strcmp(op, "lr") == 0 || strcmp(op, "rr") == 0)
         return 5;
@@ -349,6 +352,7 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
     int i, j;
 
     for (i = 0, j = 0; i<numtoken; i++) {
+        printf("for this is token val :%s \n",tokens[i].value);
         // If the current character is an operand, add it to the postfix expression
         if (tokens[i].type!=4 && (isdigit((int) *(tokens[i].value)) || allAlpha((tokens[i].value)))) {
             printf("type num is %d f\n",tokens[i].type);
@@ -368,9 +372,8 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
             top--;
         }
         else {
-            if(tokens[i].type==4 && strcmp(tokens[i+1].value, "(") != 0){
-                error=1;
-            }
+            printf("precedence ölçüm\n");
+            printf("top this is: %d",top);
             // Pop operators off the stack and add them to the postfix expression until an operator with lower precedence is encountered
 
 
@@ -391,7 +394,9 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
     }
 
     // Pop any remaining operators off the stack and add them to the postfix expression
+    printf("top:::  %d\n",top);
     while (top >= 0) {
+        printf(" this is last added to post : %s  \n", stack[top].value);
         postfix[j++].value = stack[top--].value;
     }
 
@@ -399,6 +404,7 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
     postfix[j].value = '\0';
     numofpost=j;
 
+    printf("inf to post çıkış\n");
 }
 
 
@@ -486,7 +492,6 @@ int evaluate_postfix(Token *postfix) {
                 stack[++top] = result;
             }
             else if (strcmp(op, "rs") == 0) {
-                printf("rs gördüm\n");
                 op1 = stack[top--];
                 op2 = stack[top--];
                 result = (op2 >> op1);
@@ -506,7 +511,6 @@ int evaluate_postfix(Token *postfix) {
 
             else {
                 printf("Unknown operator.Error!: %s\n", op);
-                error=1;
                 break;// Return an error code
             }
         } //ELSE IF BITTI
@@ -514,9 +518,9 @@ int evaluate_postfix(Token *postfix) {
     } // FOR BITTI
 
     printf("Evaluating for bitti ve top böyle kldı : %d",top);
-    if(top!=0){
-        printf("Error!\n"); //önemli bir error restrictive i am not sure at all
-        error=1;
+    if(top<0){
+        printf("Error!\n");
+        return -33;
     }
     return stack[top];
 
@@ -663,7 +667,7 @@ int main(){
 
 
         //blankline inputs
-        if(strcmp(line,"\n")==0){
+        if(strcmp(line,"\n")==0 ||strcmp(line," \n")==0 || strcmp(line,"\t\n")==0){
             printf(">");
             continue;
             //for easily terminate in windows doğrusu yukardaki
@@ -823,12 +827,6 @@ int main(){
             Token tokens[257];
             int numtok = 0;
             tokenize(value,tokens,&numtok);
-            if(error == 1){
-                printf("Error!\n");
-                printf(">");
-                error = 0; //reset
-                continue;
-            }
 
             infix_to_postfix(tokens,postfixx);
 
@@ -841,10 +839,11 @@ int main(){
             }
 
 
-            for (int i = 0; i < numofpost; i++) {
+            for (int i = 0; i < numtoken; i++) {
                 printf("%s\n", postfixx[i].value);
             }
             int res=evaluate_postfix(postfixx);
+            // printf("RESULT İS: %d\n",res);
             insert(Hashtable,variable,res);
 
             printf("now our table has %s matched with %d\n", variable, lookup(Hashtable,variable)); //burası line dı variable yaptım çünkü line "    a=4 için boşluklu versiyon "
@@ -857,30 +856,35 @@ int main(){
 
 
         else{ //normal expression input exists. no assignment statement
+            printf("EXPRESSION EVALUATION STARTS\n");
             Token postfixx[257];
             Token tokens[257];
             int numtok = 0;
 
+            printf("CALLING FOR TOKENIZATION\n");
             tokenize(line,tokens,&numtok);
-            if(error == 1){
-                printf("Error!\n");
+
+
+            //comment inputs
+            if (numtok == 0){
                 printf(">");
-                error = 0; //reset
+                error=1;
                 continue;
+                //for easily terminate in windows doğrusu yukardaki
             }
 
+            printf("ALL TOKENIZED\n");
+
+            printf("CALLING FOR POSTFIX TRANSFORMATION\n");
             infix_to_postfix(tokens,postfixx);
-            if(error == 1){
-                printf("Error!\n");
-                printf(">");
-                error = 0; //reset
-                continue;
-            }
-            
-            for (int i = 0; i < numofpost; i++) {
+            printf("POSTFIX TRANSFORMATION COMPLETE\n");
+
+            for (int i = 0; i < numtoken; i++) {
                 printf("%s\n", postfixx[i].value);
             }
+            printf("EVALUATION STARTS\n");
             int res=evaluate_postfix(postfixx);
+            printf("EVALUATION COMPLETE\n");
             if(error == 1){
                 printf("Error!\n");
                 printf(">");
@@ -888,9 +892,11 @@ int main(){
                 continue;
             }
 
-            printf("RESULT İS: %d\n",res);
-            printf(">");
+            if(!error) {
+                printf("RESULT İS: %d\n", res);
+            }
 
+            printf(">");
             continue;
         }
 
