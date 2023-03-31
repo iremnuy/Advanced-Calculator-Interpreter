@@ -565,11 +565,12 @@ int is_valid_function(char *str){
         }
     }
 
-    if(degree == 0){
-        return validness; //valid.
-        //we saw a comma and the paranthesis closed.
-    }
-    return 0;
+    //paranthess check zatne var alttaki kodu omitliyom.
+//    if(degree == 0){
+//        return validness; //valid.
+//        //we saw a comma and the paranthesis closed.
+//    }
+    return validness;
 }
 
 int check_function(char *line, char *function_name){
@@ -585,7 +586,7 @@ int check_function(char *line, char *function_name){
         if (func_pos != NULL) {
             func_pos = func_pos + namesize; // second part is the value
             printf("here\n");
-            printf("copyline is ... %s\n",func_pos);
+            printf("function copyline is ... %s\n",func_pos);
             int valid_function = is_valid_function(func_pos);
             if(valid_function == 1){
                 printf("valid\n");
@@ -603,6 +604,7 @@ int check_function(char *line, char *function_name){
         return 0;
     }
     else{
+        printf("valid function\n");
         return 1;
     }
 
@@ -622,12 +624,18 @@ int is_valid_operator(char *line, char *op_name){
         if (op_pos != NULL) {
             op_pos--; //include the paranthesis
             printf("here\n");
-            printf("copyline is ... %s\n",op_pos);
+            printf("operator copyline is ... %s\n",op_pos);
 
             if(*(op_pos) == '(' || *(op_pos+2) == ')'){
                 printf("we got sandiwch\n");
                 broken_op = 1;
                 break;
+            }
+
+            else{
+                op_pos+=3;
+                op_pos = strstr(op_pos, op_name);
+                continue;
             }
 
         }
@@ -637,6 +645,7 @@ int is_valid_operator(char *line, char *op_name){
         return 0; //not valid :(
     }
     else{
+        printf("valid operation\n");
         return 1;
     }
 
@@ -674,7 +683,7 @@ int main(){
             continue;
         }
 
-        //2)lines starting with operations. i.e unary cases like +1+b
+            //2)lines starting with operations. i.e unary cases like +1+b
         else if(line[0] == '+' ||line[0] == '-' || line[0] == '*' || line[0] == '&'|| line[0] == '|'){
             printf("Error!\n");
             printf(">");
@@ -687,7 +696,7 @@ int main(){
         }
 
 
-        //3)unbalanced paranthesis expressions
+            //3)unbalanced paranthesis expressions
         else if(!is_balanced(line)){
             printf("Error!\n");
             printf(">");
@@ -695,9 +704,9 @@ int main(){
         }
 
 
-        //4) broken function calls. We need to evalute the whole strng
+            //4) broken function calls. We need to evalute the whole strng
 
-        //we will need to do this 5 times...
+            //we will need to do this 5 times...
         else if(!check_function(line,"xor")){
             printf("Error!\n");
             printf(">");
@@ -725,10 +734,10 @@ int main(){
             continue;
         }
 
-        //function name checking ends.
+            //function name checking ends.
 
 
-        //5) we won't allow operators inside paranthesis like 3(+)4
+            //5) we won't allow operators inside paranthesis like 3(+)4
 
         else if(!is_valid_operator(line, "+")){
             printf("Error!\n");
@@ -755,11 +764,13 @@ int main(){
             printf(">");
             continue;
         }
-      
 
+
+        printf("ALL VALIDATIONS DONE\n");
         //assigment check
         char *pos = strchr(line, '=');
         if (pos != NULL) { // if there is an assignment statement
+            printf("ASSIGNMENT EVALUATION STARTS\n");
             *pos = '\0'; // replace = with \0
             char *variable = line; // first part is the variable
             char *value = pos + 1; // second part is the value
@@ -845,17 +856,25 @@ int main(){
 
 
         else{ //normal expression input exists. no assignment statement
-
+            printf("EXPRESSION EVALUATION STARTS\n");
             Token postfixx[257];
             Token tokens[257];
             int numtok = 0;
+
+            printf("CALLING FOR TOKENIZATION\n");
             tokenize(line,tokens,&numtok);
+            printf("ALL TOKENIZED\n");
+
+            printf("CALLING FOR POSTFIX TRANSFORMATION\n");
             infix_to_postfix(tokens,postfixx);
+            printf("POSTFIX TRANSFORMATION COMPLETE\n");
+            
             for (int i = 0; i < numtoken; i++) {
                 printf("%s\n", postfixx[i].value);
             }
+            printf("EVALUATION STARTS\n");
             int res=evaluate_postfix(postfixx);
-
+            printf("EVALUATION COMPLETE\n");
             if(error == 1){
                 printf("Error!\n");
                 printf(">");
