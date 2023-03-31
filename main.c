@@ -79,7 +79,6 @@ void insert(table *table, char *key, int value) {
         }
         i = (i + 1) % table->size;
         if (i == index) {
-            printf("Table is full.\n");
             return;
         }
     }
@@ -97,11 +96,9 @@ int lookup(table *table, char *key) {
         }
         i = (i + 1) % table->size;
         if (i == index) {
-            printf("Key not found.\n");
             return 0;
         }
     }
-    printf("Key not found.\n");
     return 0;
 }
 
@@ -351,7 +348,6 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
     int i, j;
 
     for (i = 0, j = 0; i<numtoken; i++) {
-        printf("for this is token val :%s \n",tokens[i].value);
         // If the current character is an operand, add it to the postfix expression
         if (tokens[i].type!=4 && (isdigit((int) *(tokens[i].value)) || allAlpha((tokens[i].value)))) {
             printf("type num is %d f\n",tokens[i].type);
@@ -374,8 +370,6 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
             if(tokens[i].type==4 && strcmp(tokens[i+1].value, "(") != 0){
                 error=1;
             }
-            printf("precedence ölçüm\n");
-            printf("top this is: %d",top);
             // Pop operators off the stack and add them to the postfix expression until an operator with lower precedence is encountered
 
 
@@ -396,9 +390,7 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
     }
 
     // Pop any remaining operators off the stack and add them to the postfix expression
-    printf("top:::  %d\n",top);
     while (top >= 0) {
-        printf(" this is last added to post : %s  \n", stack[top].value);
         postfix[j++].value = stack[top--].value;
     }
 
@@ -406,7 +398,6 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
     postfix[j].value = '\0';
     numofpost=j;
 
-    printf("inf to post çıkış\n");
 }
 
 
@@ -523,7 +514,7 @@ int evaluate_postfix(Token *postfix) {
 
     printf("Evaluating for bitti ve top böyle kldı : %d",top);
     if(top!=0){
-        printf("Error!\n");
+        printf("Error!\n"); //önemli bir error restrictive i am not sure at all
         error=1;
     }
     return stack[top];
@@ -853,7 +844,6 @@ int main(){
                 printf("%s\n", postfixx[i].value);
             }
             int res=evaluate_postfix(postfixx);
-            // printf("RESULT İS: %d\n",res);
             insert(Hashtable,variable,res);
 
             printf("now our table has %s matched with %d\n", variable, lookup(Hashtable,variable)); //burası line dı variable yaptım çünkü line "    a=4 için boşluklu versiyon "
@@ -866,14 +856,11 @@ int main(){
 
 
         else{ //normal expression input exists. no assignment statement
-            printf("EXPRESSION EVALUATION STARTS\n");
             Token postfixx[257];
             Token tokens[257];
             int numtok = 0;
 
-            printf("CALLING FOR TOKENIZATION\n");
             tokenize(line,tokens,&numtok);
-            printf("ALL TOKENIZED\n");
             if(error == 1){
                 printf("Error!\n");
                 printf(">");
@@ -881,9 +868,7 @@ int main(){
                 continue;
             }
 
-            printf("CALLING FOR POSTFIX TRANSFORMATION\n");
             infix_to_postfix(tokens,postfixx);
-            printf("POSTFIX TRANSFORMATION COMPLETE\n");
             if(error == 1){
                 printf("Error!\n");
                 printf(">");
@@ -894,9 +879,7 @@ int main(){
             for (int i = 0; i < numofpost; i++) {
                 printf("%s\n", postfixx[i].value);
             }
-            printf("EVALUATION STARTS\n");
             int res=evaluate_postfix(postfixx);
-            printf("EVALUATION COMPLETE\n");
             if(error == 1){
                 printf("Error!\n");
                 printf(">");
