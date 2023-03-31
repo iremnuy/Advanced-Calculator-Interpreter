@@ -27,7 +27,7 @@ void insert(table *table, char *key, int value);
 int is_balanced(char *str);
 int is_valid_function(char *str);
 int check_function(char *line, char *function_name);
-
+int is_valid_operator(char *line, char *operator);
 
 int is_balanced(char *str) { //paranthesis checker for input strings
     int len = strlen(str);
@@ -607,6 +607,45 @@ int check_function(char *line, char *function_name){
     }
 
 }
+
+
+int is_valid_operator(char *line, char *op_name){
+    char copyline[strlen(line)];
+    strcpy(copyline, line);
+    char *op_pos = strstr(copyline, op_name);
+
+    int namesize = 1;
+
+    int broken_op = 0;
+    while(op_pos != NULL) {
+        op_pos = strstr(op_pos, op_name);
+        if (op_pos != NULL) {
+            op_pos--; //include the paranthesis
+            printf("here\n");
+            printf("copyline is ... %s\n",op_pos);
+
+            if(*(op_pos) == '(' || *(op_pos+2) == ')'){
+                printf("we got sandiwch\n");
+                broken_op = 1;
+                break;
+            }
+
+        }
+    }
+
+    if(broken_op){
+        return 0; //not valid :(
+    }
+    else{
+        return 1;
+    }
+
+}
+
+
+
+
+
 int main(){
 
     Hashtable = (table *)malloc(sizeof(table));
@@ -687,6 +726,15 @@ int main(){
         }
 
         //function name checking ends.
+
+
+        //5) we won't allow operators inside paranthesis like 3(+)4
+
+        else if(!is_valid_operator(line, "+")){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
 
 
         //assigment check
