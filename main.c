@@ -20,6 +20,7 @@ typedef struct {
 
 table *Hashtable;
 
+int CHAR_BIT = 8;
 int error = 0;
 int hash_function(char *key);
 void init_table(table *table);
