@@ -173,11 +173,9 @@ Token* tokenize(char* input,Token tokens[],int* num_tokens) { //input is the giv
                 strcmp(token_str, "rr") == 0 || strcmp(token_str, "not") == 0) {
                 tokens[*num_tokens] = create_token(FUNC_CALL, token_str);
                 //in addition directly after the function call, if no left paranthesis is used it is an error. xor(
-                if( strcmp(tokens[*num_tokens+1].value, "(") != 0){
-                    error = 1;
-                }
+                
             } else {
-                tokens[*num_tokens] = create_token(IDENT, token_str);
+                tokens[*num_tokens] = create_token(IDENT, token_str);//string is not a functiopn name
 
             }
 
@@ -271,6 +269,7 @@ Token* tokenize(char* input,Token tokens[],int* num_tokens) { //input is the giv
         else {
             i++;
             curr_char = input[i];
+
         }
     }
     for (int i = 0; i < *num_tokens; i++) {
@@ -310,7 +309,7 @@ int precedence(char *op) {
         return 0;
 
     else if (strcmp(op, ",") == 0)
-        return 6;
+        return 1;
 
     else if (strcmp(op, "xor") == 0 || strcmp(op, "not") == 0 || strcmp(op, "ls") == 0 || strcmp(op, "rs") == 0 || strcmp(op, "lr") == 0 || strcmp(op, "rr") == 0)
         return 5;
@@ -372,6 +371,9 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
             top--;
         }
         else {
+            if(tokens[i].type==4 && strcmp(tokens[i+1].value, "(") != 0){
+                error=1;
+            }
             printf("precedence ölçüm\n");
             printf("top this is: %d",top);
             // Pop operators off the stack and add them to the postfix expression until an operator with lower precedence is encountered
@@ -492,6 +494,7 @@ int evaluate_postfix(Token *postfix) {
                 stack[++top] = result;
             }
             else if (strcmp(op, "rs") == 0) {
+                printf("rs gördüm\n");
                 op1 = stack[top--];
                 op2 = stack[top--];
                 result = (op2 >> op1);
@@ -511,6 +514,7 @@ int evaluate_postfix(Token *postfix) {
 
             else {
                 printf("Unknown operator.Error!: %s\n", op);
+                error=1;
                 break;// Return an error code
             }
         } //ELSE IF BITTI
@@ -518,9 +522,9 @@ int evaluate_postfix(Token *postfix) {
     } // FOR BITTI
 
     printf("Evaluating for bitti ve top böyle kldı : %d",top);
-    if(top<0){
+    if(top!=0){
         printf("Error!\n");
-        return -33;
+        error=1;
     }
     return stack[top];
 
@@ -827,6 +831,12 @@ int main(){
             Token tokens[257];
             int numtok = 0;
             tokenize(value,tokens,&numtok);
+            if(error == 1){
+                printf("Error!\n");
+                printf(">");
+                error = 0; //reset
+                continue;
+            }
 
             infix_to_postfix(tokens,postfixx);
 
@@ -839,7 +849,7 @@ int main(){
             }
 
 
-            for (int i = 0; i < numtoken; i++) {
+            for (int i = 0; i < numofpost; i++) {
                 printf("%s\n", postfixx[i].value);
             }
             int res=evaluate_postfix(postfixx);
@@ -864,12 +874,24 @@ int main(){
             printf("CALLING FOR TOKENIZATION\n");
             tokenize(line,tokens,&numtok);
             printf("ALL TOKENIZED\n");
+            if(error == 1){
+                printf("Error!\n");
+                printf(">");
+                error = 0; //reset
+                continue;
+            }
 
             printf("CALLING FOR POSTFIX TRANSFORMATION\n");
             infix_to_postfix(tokens,postfixx);
             printf("POSTFIX TRANSFORMATION COMPLETE\n");
+            if(error == 1){
+                printf("Error!\n");
+                printf(">");
+                error = 0; //reset
+                continue;
+            }
             
-            for (int i = 0; i < numtoken; i++) {
+            for (int i = 0; i < numofpost; i++) {
                 printf("%s\n", postfixx[i].value);
             }
             printf("EVALUATION STARTS\n");
