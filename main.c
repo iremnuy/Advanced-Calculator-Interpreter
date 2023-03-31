@@ -735,7 +735,27 @@ int main(){
             printf(">");
             continue;
         }
-
+        else if(!is_valid_operator(line, "-")){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+        else if(!is_valid_operator(line, "&")){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+        else if(!is_valid_operator(line, "*")){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+        else if(!is_valid_operator(line, "|")){
+            printf("Error!\n");
+            printf(">");
+            continue;
+        }
+      
 
         //assigment check
         char *pos = strchr(line, '=');
