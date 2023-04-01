@@ -10,7 +10,7 @@
 
 typedef struct {
     char *key;
-    int value;
+    long long int value;
 } element;
 
 typedef struct {
@@ -26,7 +26,7 @@ int hash_function(char *key);
 
 void init_table(table *table);
 
-void insert(table *table, char *key, int value);
+void insert(table *table, char *key, long long int value);
 
 int is_balanced(char *str);
 
@@ -75,7 +75,7 @@ void init_table(table *table) {
     }
 }
 
-void insert(table *table, char *key, int value) {
+void insert(table *table, char *key,  long long int value) {
     int index = hash_function(key);
     int i = index;
     while (table->elements[i].key != NULL && strcmp(table->elements[i].key, "") != 0) {
@@ -407,7 +407,7 @@ int evaluate_postfix(Token *postfix) {
     for (i = 0; i < numofpost; i++) {
         // If the current character is an operand, push it onto the stack
         if (isdigit(*postfix[i].value)) {
-            int operand = atoi(postfix[i].value);
+            long long int operand = atoi(postfix[i].value);
             stack[++top] = operand; //add all operands to stack
 
         } else {
@@ -499,7 +499,7 @@ int evaluate_postfix(Token *postfix) {
         }
     }
     if (top < 0) {
-        printf("Error!\n");
+        error = 1;
         return -33;
     }
     return stack[top];
@@ -797,7 +797,7 @@ int main() {
                 continue;
             }
 
-            int res = evaluate_postfix(postfixx);
+            long long int res = evaluate_postfix(postfixx);
             // printf("RESULT İS: %d\n",res);
             insert(Hashtable, variable, res);
 
@@ -822,7 +822,7 @@ int main() {
 
             infix_to_postfix(tokens, postfixx);
 
-            int res = evaluate_postfix(postfixx);
+            long long int res = evaluate_postfix(postfixx);
 
             if (error == 1) {
                 printf("Error!\n");
