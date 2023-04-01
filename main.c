@@ -234,12 +234,6 @@ Token *tokenize(char *input, Token tokens[], int *num_tokens) {
                 strcmp(token_str, "xor") == 0 || strcmp(token_str, "lr") == 0 ||
                 strcmp(token_str, "rr") == 0 || strcmp(token_str, "not") == 0) {
                 tokens[*num_tokens] = create_token(FUNC_CALL, token_str);
-
-                //Directly after the function call, if no left paranthesis is used it is an error. xor(
-
-                if (strcmp(tokens[*num_tokens + 1].value, "(") != 0) {
-                    error = 1;
-                }
             }
 
             else {
@@ -365,7 +359,7 @@ int precedence(char *op) {
         return 0;
 
     else if (strcmp(op, ",") == 0)
-        return 6;
+        return 1;
 
     else if (strcmp(op, "xor") == 0 || strcmp(op, "not") == 0 || strcmp(op, "ls") == 0 || strcmp(op, "rs") == 0 ||
              strcmp(op, "lr") == 0 || strcmp(op, "rr") == 0)
@@ -425,7 +419,7 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
 
         }
 
-        // If the current character is an operator, add it to the stack
+            // If the current character is an operator, add it to the stack
         else if (strcmp(tokens[i].value, "(") == 0) {
             stack[++top].value = (tokens[i].value); // add everything after "(" until you encounter  ")"
         }
@@ -440,6 +434,10 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
         }
 
         else {
+            if(tokens[i].type==4 && strcmp(tokens[i+1].value, "(") != 0){
+                error=1;
+            }
+
             // Pop operators off the stack and add them to the postfix expression until an operator with lower precedence is encountered
             while (top >= 0 && precedence(stack[top].value) >= precedence(tokens[i].value)) {
                 if (strcmp(stack[top].value, ",") == 0) {
@@ -538,13 +536,13 @@ long long int evaluate_postfix(Token *postfix) {
             } else if (strcmp(op, "lr") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
-                result = (op2 << op1) | (op2 >> (sizeof(op2) * CHAR_BIT - op1));
+                result = (op2 << op1) | (op2 >> (sizeof(op2) * 8 - op1));
                 stack[++top] = result;
 
             } else if (strcmp(op, "rr") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
-                result = (op2 >> op1) | (op2 << (sizeof(op2) * CHAR_BIT - op1));
+                result = (op2 >> op1) | (op2 << (sizeof(op2) * 8 - op1));
                 stack[++top] = result;
 
             } else if (strcmp(op, "ls") == 0) {
@@ -570,13 +568,13 @@ long long int evaluate_postfix(Token *postfix) {
                 continue;
 
             } else {
+                error = 1;
                 break;
             }
         }
     }
-    if (top < 0) {
+    if (top != 0) {
         error = 1;
-        return -33;
     }
     return stack[top];
 }
@@ -628,7 +626,7 @@ int is_valid_function(char *str) {
         if (str[i] == '(') {
             degree++;
         }
-        //decrease the degree when you encounter a left paranthesis.
+            //decrease the degree when you encounter a left paranthesis.
         else if (str[i] == ')') {
             degree--;
         }
@@ -758,7 +756,7 @@ int main() {
             continue;
         }
 
-        //2)lines starting with operations. i.e unary cases like +1+b
+            //2)lines starting with operations. i.e unary cases like +1+b
         else if (line[0] == '+' || line[0] == '-' || line[0] == '*' || line[0] == '&' || line[0] == '|') {
             printf("Error!\n");
             printf(">");
@@ -771,14 +769,14 @@ int main() {
         }
 
 
-        //3)unbalanced paranthesis expressions
+            //3)unbalanced paranthesis expressions
         else if (!is_balanced(line)) {
             printf("Error!\n");
             printf(">");
             continue;
         }
 
-        //4) broken function calls. We need to evalute the whole string for all the 5 functions.
+            //4) broken function calls. We need to evalute the whole string for all the 5 functions.
 
         else if (!check_function(line, "xor")) {
             printf("Error!\n");
@@ -808,7 +806,7 @@ int main() {
 
 
 
-        //5) we won't allow operators inside paranthesis like 3(+)4
+            //5) we won't allow operators inside paranthesis like 3(+)4
 
         else if (!is_valid_operator(line, "+")) {
             printf("Error!\n");
@@ -915,7 +913,7 @@ int main() {
 
         }
 
-        //EXPRESSION EVALUATION
+            //EXPRESSION EVALUATION
         else { //normal expression input exists. no assignment statement
 
             Token postfixx[257];
@@ -952,4 +950,3 @@ int main() {
         }
     }
 }
-
