@@ -9,7 +9,7 @@
 #define TABLE_SIZE 128
 
 typedef struct {
-    char* key;
+    char *key;
     int value;
 } element;
 
@@ -21,12 +21,19 @@ typedef struct {
 table *Hashtable;
 
 int error = 0;
+
 int hash_function(char *key);
+
 void init_table(table *table);
+
 void insert(table *table, char *key, int value);
+
 int is_balanced(char *str);
+
 int is_valid_function(char *str);
+
 int check_function(char *line, char *function_name);
+
 int is_valid_operator(char *line, char *operator);
 
 int is_balanced(char *str) { //paranthesis checker for input strings
@@ -50,18 +57,17 @@ int is_balanced(char *str) { //paranthesis checker for input strings
 }
 
 
-
-int hash_function(char *key){
+int hash_function(char *key) {
     int hash = 0;
     int length = strlen(key);
-    for(int i = 0; i<length ;i++){
+    for (int i = 0; i < length; i++) {
         hash = hash + key[i];
     }
     return hash % TABLE_SIZE;
 }
 
 void init_table(table *table) {
-    table->elements = (element *)calloc(TABLE_SIZE, sizeof(element));
+    table->elements = (element *) calloc(TABLE_SIZE, sizeof(element));
     table->size = TABLE_SIZE;
     for (int i = 0; i < TABLE_SIZE; i++) {
         table->elements[i].key = NULL;
@@ -79,7 +85,7 @@ void insert(table *table, char *key, int value) {
         }
         i = (i + 1) % table->size;
         if (i == index) {
-            printf("Table is full.\n");
+
             return;
         }
     }
@@ -97,18 +103,18 @@ int lookup(table *table, char *key) {
         }
         i = (i + 1) % table->size;
         if (i == index) {
-            printf("Key not found.\n");
+
             return 0;
         }
     }
-    printf("Key not found.\n");
+
     return 0;
 }
 
 
 //hashtable implementation ends here
 
-int MAX_EXPR_LEN=257;
+int MAX_EXPR_LEN = 257;
 typedef enum {
     NONE, //end token of array to understand conclusion,after "%" also can be none
     NUM, //all numbers
@@ -125,185 +131,180 @@ typedef enum {
 } TokenType;
 typedef struct {
     TokenType type;
-    char* value; //string value of the token
+    char *value; //string value of the token
     char *function_name;   // Name of function
     //Token *arguments;  //array for functions arguments just like initial array of all tokens .?
 
 } Token;
+
 Token tokens[257];
-int current_index=0;
+int current_index = 0;
 int current_token_type;
 int *num_tokens = 0;
 int old;
 int numtoken;
-Token create_token(int type, char* value);
+int numofpost;
 
-Token* tokenize(char* input,Token tokens[],int* num_tokens) { //input is the given input of user as a whole
+Token create_token(int type, char *value);
+
+Token *tokenize(char *input, Token tokens[], int *num_tokens) { //input is the given input of user as a whole
 
     int i = 0; //current array location,incremented after each process {
     char curr_char = input[i];
 
     while (curr_char != '\0' && curr_char != '%') {
+
         if (isdigit(curr_char)) {
-            char* start = input + i; //start of the number (ex. 5 for 5674)
+
+            char *start = input + i; //start of the number (ex. 5 for 5674)
+
             while (isdigit(curr_char)) { //current is a digit
                 i++;
                 curr_char = input[i];
             }
+
             int length = input + i - start;
-            char* token_str = (char*) malloc(length + 1);
+            char *token_str = (char *) malloc(length + 1);
             strncpy(token_str, start, length);
             token_str[length] = '\0'; //(last character of the number,so the number's tokenized length is one more)
             tokens[*num_tokens] = create_token(NUM, token_str);
             (*num_tokens)++;
-            //free(token_str);
+        }
 
-        } else if (isalpha(curr_char)) {
-            char* start = input + i;
+
+        else if (isalpha(curr_char)) {
+
+            char *start = input + i;
             while (isalnum(curr_char) && curr_char != ' ') {
                 i++;
                 curr_char = input[i];
             }
+
             int length = input + i - start;
-            char* token_str = (char*) malloc(length + 1);
+            char *token_str = (char *) malloc(length + 1);
             strncpy(token_str, start, length);
             token_str[length] = '\0';
+
             if (strcmp(token_str, "ls") == 0 || strcmp(token_str, "rs") == 0 ||
                 strcmp(token_str, "xor") == 0 || strcmp(token_str, "lr") == 0 ||
                 strcmp(token_str, "rr") == 0 || strcmp(token_str, "not") == 0) {
                 tokens[*num_tokens] = create_token(FUNC_CALL, token_str);
                 //in addition directly after the function call, if no left paranthesis is used it is an error. xor(
-                if( strcmp(tokens[*num_tokens+1].value, "(") != 0){
+
+                if (strcmp(tokens[*num_tokens + 1].value, "(") != 0) {
                     error = 1;
                 }
-            } else {
-                tokens[*num_tokens] = create_token(IDENT, token_str);
-
             }
 
-            //free(token_str);
+            else {
+                tokens[*num_tokens] = create_token(IDENT, token_str);
+            }
+
             (*num_tokens)++;
+        }
 
-
-        } else if (curr_char == ',') {
-            char* token_str = (char*) malloc(2);
+        else if (curr_char == ',') {
+            char *token_str = (char *) malloc(2);
             token_str[0] = curr_char;
             token_str[1] = '\0';
-            tokens[*num_tokens] = create_token(COMMA,token_str);
+            tokens[*num_tokens] = create_token(COMMA, token_str);
             (*num_tokens)++;
             i++;
             curr_char = input[i];
-            //free(token_str);
         }
+
         else if (curr_char == '=') {
-            char* token_str = (char*) malloc(2);
+            char *token_str = (char *) malloc(2);
             token_str[0] = curr_char;
             token_str[1] = '\0';
             tokens[*num_tokens] = create_token(ASSIGN, token_str);
             (*num_tokens)++;
             i++;
             curr_char = input[i];
-            //free(token_str);
         }
-        else if (curr_char == '+' || curr_char == '-' || curr_char == '*'  )
-        {
-            char* token_str = (char*) malloc(2);
+
+        else if (curr_char == '+' || curr_char == '-' || curr_char == '*') {
+            char *token_str = (char *) malloc(2);
             token_str[0] = curr_char;
             token_str[1] = '\0';
-            tokens[*num_tokens] =create_token(OP, token_str);
+            tokens[*num_tokens] = create_token(OP, token_str);
             //create token returns a pointer this line assigns the pointers reference token to tokens array
             (*num_tokens)++;
             i++;
             curr_char = input[i];
-            //free(token_str);
         }
-        else if(curr_char == '(' ){
-            char* token_str = (char*) malloc(2);
+
+        else if (curr_char == '(') {
+            char *token_str = (char *) malloc(2);
             token_str[0] = curr_char;
             token_str[1] = '\0';
-            tokens[*num_tokens] =create_token(LPAR, token_str);
+            tokens[*num_tokens] = create_token(LPAR, token_str);
             //create token returns a pointer this line assigns the pointers reference token to tokens array
             (*num_tokens)++;
             i++;
             curr_char = input[i];
-            //free(token_str);
-
-
-
-        }else if(curr_char == ')'){
-            char* token_str = (char*) malloc(2);
-            token_str[0] = curr_char;
-            token_str[1] = '\0';
-            tokens[*num_tokens] =create_token(RPAR, token_str);
-            //create token returns a pointer this line assigns the pointers reference token to tokens array
-            (*num_tokens)++;
-            i++;
-            curr_char = input[i];
-            //free(token_str);
-
         }
-        else if( curr_char == '&'){
-            char* token_str = (char*) malloc(2);
+
+        else if (curr_char == ')') {
+            char *token_str = (char *) malloc(2);
             token_str[0] = curr_char;
             token_str[1] = '\0';
-            tokens[*num_tokens] =create_token(AND, token_str);
+            tokens[*num_tokens] = create_token(RPAR, token_str);
             //create token returns a pointer this line assigns the pointers reference token to tokens array
             (*num_tokens)++;
             i++;
             curr_char = input[i];
-            //free(token_str);
 
 
-        }else if( curr_char == '|'){
-            char* token_str = (char*) malloc(2);
+        } else if (curr_char == '&') {
+            char *token_str = (char *) malloc(2);
             token_str[0] = curr_char;
             token_str[1] = '\0';
-            tokens[*num_tokens] =create_token(OR, token_str);
+            tokens[*num_tokens] = create_token(AND, token_str);
             //create token returns a pointer this line assigns the pointers reference token to tokens array
             (*num_tokens)++;
             i++;
             curr_char = input[i];
-            //free(token_str);
-
-
-
         }
+
+        else if (curr_char == '|') {
+            char *token_str = (char *) malloc(2);
+            token_str[0] = curr_char;
+            token_str[1] = '\0';
+            tokens[*num_tokens] = create_token(OR, token_str);
+            //create token returns a pointer this line assigns the pointers reference token to tokens array
+            (*num_tokens)++;
+            i++;
+            curr_char = input[i];
+        }
+
         else {
             i++;
             curr_char = input[i];
         }
     }
     for (int i = 0; i < *num_tokens; i++) {
-        //Token token = tokens[i];
-
-
-        //printf("Token %d: type=%d, value=%s \n", i, tokens[i].type,tokens[i].value);
-        numtoken=*num_tokens;
+        numtoken = *num_tokens;
     }
+
     return tokens;
-
-
 }
 
 
-
 // Function to create a new token
-Token create_token(int type, char* value) {
+Token create_token(int type, char *value) {
     Token token;
-    // Set the token fields
-    token.type = type;
-    token.value=value;
-    //printf("Creating token of value : ... ...%s\n",token.value);
 
+    token.type = type;
+    token.value = value;
 
     return token;
 }
 
 
 int precedence(char *op) {
-    printf("precdence called this is string: %s",op);
 
-    if  (strcmp(op, "=") == 0)
+    if (strcmp(op, "=") == 0)
         return 7;
 
     else if (strcmp(op, "(") == 0 || strcmp(op, ")") == 0)
@@ -312,14 +313,14 @@ int precedence(char *op) {
     else if (strcmp(op, ",") == 0)
         return 6;
 
-    else if (strcmp(op, "xor") == 0 || strcmp(op, "not") == 0 || strcmp(op, "ls") == 0 || strcmp(op, "rs") == 0 || strcmp(op, "lr") == 0 || strcmp(op, "rr") == 0)
+    else if (strcmp(op, "xor") == 0 || strcmp(op, "not") == 0 || strcmp(op, "ls") == 0 || strcmp(op, "rs") == 0 ||
+             strcmp(op, "lr") == 0 || strcmp(op, "rr") == 0)
         return 5;
 
-    else if (strcmp(op, "*") == 0){
-        printf("multiplication precedence\n");
+    else if (strcmp(op, "*") == 0) {
         return 4;
     }
-    else if (strcmp(op, "+") == 0 || strcmp(op, "-") ==0)
+    else if (strcmp(op, "+") == 0 || strcmp(op, "-") == 0)
         return 3;
 
     else if (strcmp(op, "&") == 0)
@@ -330,11 +331,9 @@ int precedence(char *op) {
     else
         return -1;
 }
-int numofpost;
 
 
-
-int allAlpha(char* str) { //checks all the string rather than s string calculator
+int allAlpha(char *str) { //checks all the string rather than s string calculator
     int i = 0;
     while (str[i]) {
         if (!isalpha(str[i])) {
@@ -346,46 +345,39 @@ int allAlpha(char* str) { //checks all the string rather than s string calculato
 }
 
 void infix_to_postfix(Token *tokens, Token *postfix) {
-    printf("evaluating infix to postfix\n");
+
     Token stack[MAX_EXPR_LEN];
     int top = -1;
     int i, j;
 
-    for (i = 0, j = 0; i<numtoken; i++) {
-        printf("for this is token val :%s \n",tokens[i].value);
+    for (i = 0, j = 0; i < numtoken; i++) {
+
         // If the current character is an operand, add it to the postfix expression
-        if (tokens[i].type!=4 && (isdigit((int) *(tokens[i].value)) || allAlpha((tokens[i].value)))) {
-            printf("type num is %d f\n",tokens[i].type);
+        if (tokens[i].type != 4 && (isdigit((int) *(tokens[i].value)) || allAlpha((tokens[i].value)))) {
             postfix[j++].value = (tokens[i].value);
-            printf("this is assigned to postfix : %s",tokens[i].value);
+
         }
             // If the current character is an operator, add it to the stack
         else if (strcmp(tokens[i].value, "(") == 0) {
             stack[++top].value = (tokens[i].value); // "(" dan sonraki her şeyi ")" görene kadar ekle
         }
+
         else if (strcmp(tokens[i].value, ")") == 0) {
             // Pop operators off the stack and add them to the postfix expression until a matching left parenthesis is encountered
-            while (top >= 0 && strcmp(stack[top].value,"(")!=0) {
+            while (top >= 0 && strcmp(stack[top].value, "(") != 0) {
                 postfix[j++].value = stack[top--].value;
             }
             // Discard the left parenthesis
             top--;
         }
+
         else {
-            printf("precedence ölçüm\n");
-            printf("top this is: %d",top);
             // Pop operators off the stack and add them to the postfix expression until an operator with lower precedence is encountered
-
-
-
             while (top >= 0 && precedence(stack[top].value) >= precedence(tokens[i].value)) {
-                printf("precdence kosulu oldu tamam\n");
-                if (strcmp(stack[top].value,",")==0){
-                    printf("virgül var\n");
+                if (strcmp(stack[top].value, ",") == 0) {
                     top--; //pass the comma and reach the function
                     continue;
                 }
-
                 postfix[j++].value = stack[top--].value;
             }
             // Push the current operator onto the stack
@@ -394,145 +386,131 @@ void infix_to_postfix(Token *tokens, Token *postfix) {
     }
 
     // Pop any remaining operators off the stack and add them to the postfix expression
-    printf("top:::  %d\n",top);
+
     while (top >= 0) {
-        printf(" this is last added to post : %s  \n", stack[top].value);
         postfix[j++].value = stack[top--].value;
     }
 
     // Add null terminator to the end of the postfix expression
     postfix[j].value = '\0';
-    numofpost=j;
-
-    printf("inf to post çıkış\n");
+    numofpost = j;
 }
-
-
 
 
 // Function to evaluate a postfix expression
 int evaluate_postfix(Token *postfix) {
-    printf("evaluating\n");
+
     int stack[MAX_EXPR_LEN];
     int top = -1;
     int i;
-    for (i = 0; i<numofpost; i++) {
+
+    for (i = 0; i < numofpost; i++) {
         // If the current character is an operand, push it onto the stack
         if (isdigit(*postfix[i].value)) {
             int operand = atoi(postfix[i].value);
             stack[++top] = operand; //add all operands to stack
-        }
-        else {
+
+        } else {
             int op1, op2, result;
-            char op[32]=""; //string to store operators,function names or variable names to print out result of that variable
+            char op[32] = ""; //string to store operators,function names or variable names to print out result of that variable
             int j = 0;
             strcpy(op, postfix[i].value);
-            printf("this is op %s",op);
+
             if (strcmp(op, "xor") == 0) {
-                printf("xor catch\n");
+
                 op1 = (stack[top--]);
-                printf("op1: %d\n",op1);
                 op2 = (stack[top--]);
-                printf("op2: %d\n",op2);
                 result = op1 ^ op2;
                 stack[++top] = result; //integerı stack token valuesu vey bir sekilde atamak lazım
-            }
-            else if (strcmp(op, "not") == 0) {
+
+            } else if (strcmp(op, "not") == 0) {
                 op1 = stack[top--];
                 result = ~op1;
                 stack[++top] = result;
-            }
-            else if (strcmp(op, "*") == 0) {
+
+            } else if (strcmp(op, "*") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
                 result = op2 * op1;
                 stack[++top] = result;
-            }
-            else if (strcmp(op, "+") == 0) {
+
+            } else if (strcmp(op, "+") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
                 result = op2 + op1;
-                printf("lastly result %d \n",result);
                 stack[++top] = result;
-            }
-            else if (strcmp(op, "-") == 0) {
+
+            } else if (strcmp(op, "-") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
                 result = op2 - op1;
                 stack[++top] = result;
-            }
-            else if (strcmp(op, "&") == 0) {
+
+            } else if (strcmp(op, "&") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
-                result =op2&op1;
+                result = op2 & op1;
                 stack[++top] = result;
-            }
-            else if (strcmp(op, "|") == 0) {
+
+            } else if (strcmp(op, "|") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
-                result=op2|op1;
+                result = op2 | op1;
                 stack[++top] = result;
-            }
-            else if (strcmp(op, "lr") == 0) {
+
+            } else if (strcmp(op, "lr") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
                 result = (op2 << op1) | (op2 >> (sizeof(op2) * CHAR_BIT - op1));
                 stack[++top] = result;
-            }
-            else if (strcmp(op, "rr") == 0) {
+
+            } else if (strcmp(op, "rr") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
                 result = (op2 >> op1) | (op2 << (sizeof(op2) * CHAR_BIT - op1));
                 stack[++top] = result;
-            }
-            else if (strcmp(op, "ls") == 0) {
+
+            } else if (strcmp(op, "ls") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
                 result = (op2 << op1);
                 stack[++top] = result;
-            }
-            else if (strcmp(op, "rs") == 0) {
+
+            } else if (strcmp(op, "rs") == 0) {
                 op1 = stack[top--];
                 op2 = stack[top--];
                 result = (op2 >> op1);
                 stack[++top] = result;
-            }
-            else if (isalpha(*postfix[i].value) && strcmp(postfix[i].value,op)==0 ){ //then it is not a function name bec we checked for it before,it is a variable either declared or not
-                printf("variable operator: %s\n", op); //sadece bir variable görmesi yetmiyor bu gördüğünün operand ismi ile ynı olması lazım
-                result = lookup(Hashtable,op); //bazen mesela a=3%yorum durumunda %yorum kısmı buraya giriyor ve op a iken o sıradaki postfix[i].value %yorum olmasına rağmen a yı printliyor
+
+            } else if (isalpha(*postfix[i].value) && strcmp(postfix[i].value, op) ==
+                                                     0) { //then it is not a function name bec we checked for it before,it is a variable either declared or not
+                // printf("variable operator: %s\n", op); //sadece bir variable görmesi yetmiyor bu gördüğünün operand ismi ile ynı olması lazım
+                result = lookup(Hashtable,
+                                op); //bazen mesela a=3%yorum durumunda %yorum kısmı buraya giriyor ve op a iken o sıradaki postfix[i].value %yorum olmasına rağmen a yı printliyor
                 stack[++top] = result;
 
-            }
-            else if (strcmp(op, ",") == 0){
+            } else if (strcmp(op, ",") == 0) {
                 //top--;
                 continue;
 
-            }
-
-            else {
-                printf("Unknown operator.Error!: %s\n", op);
+            } else {
                 break;// Return an error code
             }
-        } //ELSE IF BITTI
-
-    } // FOR BITTI
-
-    printf("Evaluating for bitti ve top böyle kldı : %d",top);
-    if(top<0){
+        }
+    }
+    if (top < 0) {
         printf("Error!\n");
         return -33;
     }
     return stack[top];
+}
 
 
-} // CIKIS
-
-
-char* trim(char* str) {
-    char* end;
+char *trim(char *str) {
+    char *end;
 
     // Trim leading whitespace
-    while (isspace((unsigned char)*str)) {
+    while (isspace((unsigned char) *str)) {
         str++;
     }
 
@@ -542,38 +520,37 @@ char* trim(char* str) {
 
     // Trim trailing whitespace
     end = str + strlen(str) - 1;
-    while (end > str && isspace((unsigned char)*end)) {
+    while (end > str && isspace((unsigned char) *end)) {
         end--;
     }
 
     // Write new null terminator
     *(end + 1) = '\0';
-
     return str;
 }
 
-int is_valid_function(char *str){
+
+int is_valid_function(char *str) {
+
     int degree = 0;
     int validness = 0;
+
     for (int i = 0; i < strlen(str); i++) {
         if (str[i] == '(') {
             degree++;
+
         } else if (str[i] == ')') {
             degree--;
+
         } else if (str[i] == ',' && degree == 1) {
             validness = 1;
         }
     }
-
-    //paranthess check zatne var alttaki kodu omitliyom.
-//    if(degree == 0){
-//        return validness; //valid.
-//        //we saw a comma and the paranthesis closed.
-//    }
     return validness;
 }
 
-int check_function(char *line, char *function_name){
+int check_function(char *line, char *function_name) {
+
     char copyline[strlen(line)];
     strcpy(copyline, line);
     char *func_pos = strstr(copyline, function_name);
@@ -581,37 +558,35 @@ int check_function(char *line, char *function_name){
     int namesize = strlen(function_name);
 
     int broken_function = 0;
-    while(func_pos != NULL) {
+
+    while (func_pos != NULL) {
         func_pos = strstr(func_pos, function_name);
+
         if (func_pos != NULL) {
             func_pos = func_pos + namesize; // second part is the value
-            printf("here\n");
-            printf("function copyline is ... %s\n",func_pos);
             int valid_function = is_valid_function(func_pos);
-            if(valid_function == 1){
-                printf("valid\n");
+
+            if (valid_function == 1) {
                 func_pos = strstr(func_pos, function_name);
                 continue;
-            }
-            else{
+
+            } else {
                 broken_function = 1;
                 break;
             }
         }
     }
 
-    if(broken_function){
+    if (broken_function) {
         return 0;
-    }
-    else{
-        printf("valid function\n");
+    } else {
         return 1;
     }
-
 }
 
 
-int is_valid_operator(char *line, char *op_name){
+int is_valid_operator(char *line, char *op_name) {
+
     char copyline[strlen(line)];
     strcpy(copyline, line);
     char *op_pos = strstr(copyline, op_name);
@@ -619,21 +594,19 @@ int is_valid_operator(char *line, char *op_name){
     int namesize = 1;
 
     int broken_op = 0;
-    while(op_pos != NULL) {
+
+    while (op_pos != NULL) {
         op_pos = strstr(op_pos, op_name);
+
         if (op_pos != NULL) {
             op_pos--; //include the paranthesis
-            printf("here\n");
-            printf("operator copyline is ... %s\n",op_pos);
 
-            if(*(op_pos) == '(' || *(op_pos+2) == ')'){
-                printf("we got sandiwch\n");
+            if (*(op_pos) == '(' || *(op_pos + 2) == ')') {
                 broken_op = 1;
                 break;
-            }
 
-            else{
-                op_pos+=3;
+            } else {
+                op_pos += 3;
                 op_pos = strstr(op_pos, op_name);
                 continue;
             }
@@ -641,33 +614,28 @@ int is_valid_operator(char *line, char *op_name){
         }
     }
 
-    if(broken_op){
+    if (broken_op) {
         return 0; //not valid :(
-    }
-    else{
-        printf("valid operation\n");
+    } else {
         return 1;
     }
-
 }
 
 
+int main() {
 
-
-
-int main(){
-
-    Hashtable = (table *)malloc(sizeof(table));
+    Hashtable = (table *) malloc(sizeof(table));
     init_table(Hashtable);
 
 
-    char line[257]=""; //input line will be stored in here
+    char line[257] = ""; //input line will be stored in here
     printf(">");
-    while(fgets(line,sizeof(line),stdin) != NULL ){   //CTRL^D inputs are checked by != null... apperently this works on unix sistems
+    while (fgets(line, sizeof(line), stdin) !=
+           NULL) {   //CTRL^D inputs are checked by != null... apperently this works on unix sistems
 
 
         //blankline inputs
-        if(strcmp(line,"\n")==0 ||strcmp(line," \n")==0 || strcmp(line,"\t\n")==0){
+        if (strcmp(line, "\n") == 0 || strcmp(line, " \n") == 0 || strcmp(line, "\t\n") == 0) {
             printf(">");
             continue;
             //for easily terminate in windows doğrusu yukardaki
@@ -677,58 +645,56 @@ int main(){
         //erroneous inputs
         //1)empty paranthesis
         char *paranthesis_pos = strstr(line, "()");
-        if(paranthesis_pos != NULL){
+        if (paranthesis_pos != NULL) {
             printf("Error!\n");
             printf(">");
             continue;
         }
 
             //2)lines starting with operations. i.e unary cases like +1+b
-        else if(line[0] == '+' ||line[0] == '-' || line[0] == '*' || line[0] == '&'|| line[0] == '|'){
+        else if (line[0] == '+' || line[0] == '-' || line[0] == '*' || line[0] == '&' || line[0] == '|') {
             printf("Error!\n");
             printf(">");
             continue;
         }
 
-        char *commentPos=strchr(line,'%');
-        if (commentPos!=NULL){
-            *commentPos='\0'; //trim the expression to the % part included \0
+        char *commentPos = strchr(line, '%');
+        if (commentPos != NULL) {
+            *commentPos = '\0'; //trim the expression to the % part included \0
         }
 
 
             //3)unbalanced paranthesis expressions
-        else if(!is_balanced(line)){
+        else if (!is_balanced(line)) {
             printf("Error!\n");
             printf(">");
             continue;
         }
-
 
             //4) broken function calls. We need to evalute the whole strng
 
             //we will need to do this 5 times...
-        else if(!check_function(line,"xor")){
+        else if (!check_function(line, "xor")) {
             printf("Error!\n");
             printf(">");
             continue;
-        }
 
-        else if(!check_function(line,"ls")){
+        } else if (!check_function(line, "ls")) {
             printf("Error!\n");
             printf(">");
             continue;
-        }
-        else if(!check_function(line,"rs")){
+
+        } else if (!check_function(line, "rs")) {
             printf("Error!\n");
             printf(">");
             continue;
-        }
-        else if(!check_function(line,"rr")){
+
+        } else if (!check_function(line, "rr")) {
             printf("Error!\n");
             printf(">");
             continue;
-        }
-        else if(!check_function(line,"lr")){
+
+        } else if (!check_function(line, "lr")) {
             printf("Error!\n");
             printf(">");
             continue;
@@ -736,176 +702,142 @@ int main(){
 
             //function name checking ends.
 
-
             //5) we won't allow operators inside paranthesis like 3(+)4
 
-        else if(!is_valid_operator(line, "+")){
+        else if (!is_valid_operator(line, "+")) {
             printf("Error!\n");
             printf(">");
             continue;
-        }
-        else if(!is_valid_operator(line, "-")){
+
+        } else if (!is_valid_operator(line, "-")) {
             printf("Error!\n");
             printf(">");
             continue;
-        }
-        else if(!is_valid_operator(line, "&")){
+
+        } else if (!is_valid_operator(line, "&")) {
             printf("Error!\n");
             printf(">");
             continue;
-        }
-        else if(!is_valid_operator(line, "*")){
+
+        } else if (!is_valid_operator(line, "*")) {
             printf("Error!\n");
             printf(">");
             continue;
-        }
-        else if(!is_valid_operator(line, "|")){
+
+        } else if (!is_valid_operator(line, "|")) {
             printf("Error!\n");
             printf(">");
             continue;
         }
 
 
-        printf("ALL VALIDATIONS DONE\n");
+
         //assigment check
         char *pos = strchr(line, '=');
         if (pos != NULL) { // if there is an assignment statement
-            printf("ASSIGNMENT EVALUATION STARTS\n");
+
             *pos = '\0'; // replace = with \0
             char *variable = line; // first part is the variable
             char *value = pos + 1; // second part is the value
 
-            variable=trim(variable); //sağ ve soldan boşlukları kırpılmış variable a  =3 çalışır ama a b = 3 çalışmaz
-            value=trim(value);
-            if (!allAlpha(variable)){
-                printf("Given variable is not valid\n");
+            variable = trim(variable); //sağ ve soldan boşlukları kırpılmış variable a  =3 çalışır ama a b = 3 çalışmaz
+            value = trim(value);
+
+            if (!allAlpha(variable)) {
                 printf("Error!\n");
                 printf(">");
                 continue;
-            }
-            else if (strcmp("xor",variable)==0){
-                printf("reserved keyword\n");
+
+            } else if (strcmp("xor", variable) == 0) {
                 printf("Error!\n");
                 printf(">");
                 continue;
-            }
-            else if (strcmp("ls",variable)==0){
-                printf("reserved keyword\n");
+
+            } else if (strcmp("ls", variable) == 0) {
                 printf("Error!\n");
                 printf(">");
                 continue;
-            }
-            else if (strcmp("rs",variable)==0){
-                printf("reserved keyword\n");
+
+            } else if (strcmp("rs", variable) == 0) {
                 printf("Error!\n");
                 printf(">");
                 continue;
-            }
-            else if (strcmp("rr",variable)==0){
-                printf("reserved keyword\n");
+
+            } else if (strcmp("rr", variable) == 0) {
                 printf("Error!\n");
                 printf(">");
                 continue;
-            }
-            else if (strcmp("lr",variable)==0){
-                printf("reserved keyword\n");
+
+            } else if (strcmp("lr", variable) == 0) {
                 printf("Error!\n");
                 printf(">");
                 continue;
-            }
-            else if (strcmp("not",variable)==0){
-                printf("reserved keyword\n");
+
+            } else if (strcmp("not", variable) == 0) {
                 printf("Error!\n");
                 printf(">");
                 continue;
+
             }
-            printf("variable after trimming and checking: %s",variable);
 
 
             // do something with variable and value
             Token postfixx[257];
             Token tokens[257];
             int numtok = 0;
-            tokenize(value,tokens,&numtok);
+            tokenize(value, tokens, &numtok);
 
-            infix_to_postfix(tokens,postfixx);
+            infix_to_postfix(tokens, postfixx);
 
             //erroneous tokenization idea
-            if(error == 1){
+            if (error == 1) {
                 printf("Error!\n");
                 printf(">");
                 error = 0; //reset
                 continue;
             }
 
-
-            for (int i = 0; i < numtoken; i++) {
-                printf("%s\n", postfixx[i].value);
-            }
-            int res=evaluate_postfix(postfixx);
+            int res = evaluate_postfix(postfixx);
             // printf("RESULT İS: %d\n",res);
-            insert(Hashtable,variable,res);
+            insert(Hashtable, variable, res);
 
-            printf("now our table has %s matched with %d\n", variable, lookup(Hashtable,variable)); //burası line dı variable yaptım çünkü line "    a=4 için boşluklu versiyon "
             printf(">");
             continue;
 
-        }
+        } else { //normal expression input exists. no assignment statement
 
-
-
-
-        else{ //normal expression input exists. no assignment statement
-            printf("EXPRESSION EVALUATION STARTS\n");
             Token postfixx[257];
             Token tokens[257];
             int numtok = 0;
 
-            printf("CALLING FOR TOKENIZATION\n");
-            tokenize(line,tokens,&numtok);
-
+            tokenize(line, tokens, &numtok);
 
             //comment inputs
-            if (numtok == 0){
+            if (numtok == 0) {
                 printf(">");
-                error=1;
+                error = 1;
                 continue;
-                //for easily terminate in windows doğrusu yukardaki
             }
 
-            printf("ALL TOKENIZED\n");
 
-            printf("CALLING FOR POSTFIX TRANSFORMATION\n");
-            infix_to_postfix(tokens,postfixx);
-            printf("POSTFIX TRANSFORMATION COMPLETE\n");
+            infix_to_postfix(tokens, postfixx);
 
-            for (int i = 0; i < numtoken; i++) {
-                printf("%s\n", postfixx[i].value);
-            }
-            printf("EVALUATION STARTS\n");
-            int res=evaluate_postfix(postfixx);
-            printf("EVALUATION COMPLETE\n");
-            if(error == 1){
+            int res = evaluate_postfix(postfixx);
+
+            if (error == 1) {
                 printf("Error!\n");
                 printf(">");
                 error = 0; //reset
                 continue;
             }
 
-            if(!error) {
-                printf("RESULT İS: %d\n", res);
+            if (!error) {
+                printf("%d\n", res);
             }
 
             printf(">");
             continue;
         }
-
     }
-
-    printf("end of program");
-
 }
 
-/**
-* isvalid function modifiye edilip 3(+)4 tarzı işlemlerden korumaya alınacak.
-*/
